@@ -15,13 +15,13 @@
     <link rel="stylesheet" href="<?php $this->options->themeUrl('style.css'); ?>">
     <script>
         tailwind.config = {
-            darkMode: 'class', // 启用手动切换暗黑模式
+            darkMode: 'class', 
             theme: {
                 extend: {
                     colors: {
                         teal: '#00d2ff', 
                         darkBg: '#121418', 
-                        darkCard: '#1a1d24', // 暗黑模式卡片背景
+                        darkCard: '#1a1d24', 
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -35,7 +35,7 @@
         }
     </script>
 
-    <style>
+        <style>
         :root { --teal: #00d2ff; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -45,7 +45,22 @@
         
         .text-glow { text-shadow: 0 0 20px rgba(0, 210, 255, 0.4); }
         body { transition: background-color 0.5s ease, color 0.5s ease; }
+
+    
+        code, pre, pre code, .prose code, p code {
+            white-space: pre-wrap !important;     
+            word-wrap: break-word !important;     
+            word-break: break-all !important;     
+            overflow-wrap: anywhere !important; 
+            display: inline-block !important;     
+            max-width: 100% !important;         
+        }
+        
+        pre code {
+            display: block !important;
+        }
     </style>
+
 
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -134,10 +149,10 @@
 
         function openDrawer() {
             drawer.classList.remove('hidden');
-            void drawer.offsetWidth; // 触发重绘
+            void drawer.offsetWidth; 
             overlay.classList.remove('opacity-0');
             panel.classList.remove('translate-x-full');
-            document.body.style.overflow = 'hidden'; // 阻止底层滚动
+            document.body.style.overflow = 'hidden'; 
         }
 
         function closeDrawer() {
@@ -151,3 +166,6 @@
         closeBtn.addEventListener('click', closeDrawer);
         overlay.addEventListener('click', closeDrawer);
     </script>
+
+</body>
+</html>

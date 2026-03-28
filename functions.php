@@ -126,36 +126,41 @@ function threadedComments($comments, $options) {
     $commentLevelClass = $comments->levels > 0 ? ' ml-8 md:ml-14 mt-6 border-l-2 border-teal/20 pl-4 md:pl-6' : ' mt-8';
     ?>
     <li id="li-<?php $comments->theId(); ?>" class="comment-body<?php echo $commentLevelClass; ?> list-none">
-        <div id="<?php $comments->theId(); ?>" class="flex gap-4 group">
-            <div class="flex-shrink-0 mt-1">
-                <?php $comments->gravatar('48', 'w-10 h-10 md:w-12 md:h-12 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/5 transition-transform duration-300 group-hover:scale-105 group-hover:shadow-glow'); ?>
-            </div>
-            <div class="flex-grow w-full overflow-hidden">
-                <div class="flex items-center justify-between mb-1.5">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm md:text-base"><?php $comments->author(); ?></span>
-                        
-                        <span class="text-[10px] md:text-xs px-2 py-0.5 bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 rounded-md flex items-center gap-1 border border-gray-200/50 dark:border-white/5">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            <?php echo getOS($comments->agent); ?>
+        
+        <div id="<?php $comments->theId(); ?>" class="block w-full">
+            
+            <div class="flex gap-4 group">
+                <div class="flex-shrink-0 mt-1">
+                    <?php $comments->gravatar('48', 'w-10 h-10 md:w-12 md:h-12 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/5 transition-transform duration-300 group-hover:scale-105 group-hover:shadow-glow'); ?>
+                </div>
+                <div class="flex-grow w-full overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm md:text-base"><?php $comments->author(); ?></span>
+                            
+                            <span class="text-[10px] md:text-xs px-2 py-0.5 bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 rounded-md flex items-center gap-1 border border-gray-200/50 dark:border-white/5">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <?php echo getOS($comments->agent); ?>
+                            </span>
+                            
+                            <?php if ($comments->authorId == $comments->ownerId): ?>
+                                <span class="text-[10px] px-1.5 py-0.5 bg-teal text-white rounded shadow-sm shadow-teal/30">Author</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2 break-words">
+                        <?php $comments->content(); ?>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-gray-400">
+                        <time datetime="<?php $comments->date('c'); ?>"><?php $comments->date('Y-m-d H:i'); ?></time>
+                        <span class="text-teal hover:underline cursor-pointer transition-colors">
+                            <?php $comments->reply('回复'); ?>
                         </span>
-                        
-                        <?php if ($comments->authorId == $comments->ownerId): ?>
-                            <span class="text-[10px] px-1.5 py-0.5 bg-teal text-white rounded shadow-sm shadow-teal/30">Author</span>
-                        <?php endif; ?>
                     </div>
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2 break-words">
-                    <?php $comments->content(); ?>
-                </div>
-                <div class="flex items-center gap-4 text-xs text-gray-400">
-                    <time datetime="<?php $comments->date('c'); ?>"><?php $comments->date('Y-m-d H:i'); ?></time>
-                    <span class="text-teal hover:underline cursor-pointer transition-colors">
-                        <?php $comments->reply('回复'); ?>
-                    </span>
-                </div>
             </div>
-        </div>
+            </div>
+        
         <?php if ($comments->children): ?>
             <div class="comment-children">
                 <?php $comments->threadedComments($options); ?>
@@ -164,6 +169,7 @@ function threadedComments($comments, $options) {
     </li>
     <?php
 }
+
 
 
 function getPostThumb($obj) {
