@@ -1,3 +1,4 @@
+/*markdown的定义写在了header的60多行里，不然压不住Tailwind覆盖。*/
 :root {
     --teal: #39c5bb;
     --teal-dim: rgba(57,197,187,0.15);
@@ -28,6 +29,8 @@
     --grid-line: rgba(57,197,187,0.03); 
     --glow-radial: rgba(57,197,187,0.07);
 }
+
+
 body {
     background-color: var(--bg);
     color: var(--text);
@@ -37,259 +40,166 @@ body {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 body::before {
-    content: ''; position: fixed; inset: 0;
+    content: ''; 
+    position: fixed; 
+    inset: 0;
     background: radial-gradient(ellipse 60% 50% at 15% 20%, var(--glow-radial) 0%, transparent 60%),
                 radial-gradient(ellipse 40% 40% at 85% 75%, var(--glow-radial) 0%, transparent 55%);
-    pointer-events: none; z-index: -1;
+    pointer-events: none; 
+    z-index: -1;
     transition: background 0.5s ease;
 }
 body::after {
-    content: ''; position: fixed; inset: 0;
+    content: ''; 
+    position: fixed; 
+    inset: 0;
     background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
                       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 60px 60px;
-    pointer-events: none; z-index: -1;
+    pointer-events: none; 
+    z-index: -1;
     transition: background-image 0.5s ease;
 }
-body .post-content {
-    font-size: 1.05rem;
-    letter-spacing: 0.01em;
-}
-body .post-content h2, body .post-content h3 {
-    font-family: 'Playfair Display', serif;
-    color: var(--teal);
-    margin: 2rem 0 1rem;
-    transition: color 0.5s ease;
-}
-body .post-content p { 
-    margin-bottom: 1.5rem; 
-}
-body .post-content.prose blockquote {
-    border-left: 3px solid var(--teal);
-    background: var(--teal-dim);
-    padding: 1rem 1.5rem;
-    margin: 2rem 0;
-    border-radius: 0 12px 12px 0;
-    color: var(--text-muted);
-    transition: background-color 0.5s ease, color 0.5s ease;
-    font-style: normal;
-}
-body .post-content.prose blockquote p:first-of-type::before,
-body .post-content.prose blockquote p:last-of-type::after {
-    content: none !important;
-}
-body .post-content.prose img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    margin: 2rem auto;
-    transition: border-color 0.5s ease, box-shadow 0.3s ease;
-}
-body .post-content.prose img:hover {
-    box-shadow: 0 0 20px var(--teal-glow);
-}
 
-body .post-content.prose pre {
-    width: 100% !important;        
-    max-width: 100% !important;    
-    overflow-x: auto !important;   
-    word-wrap: break-word !important;  
-    word-break: break-all !important;
-    white-space: pre-wrap !important;   
-    background-color: var(--bg2) !important;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin: 1.5em 0;
-    -webkit-overflow-scrolling: touch;
-}
 
-body .post-content.prose code::before,
-body .post-content.prose code::after,
-body .post-content.prose :not(pre) > code::before,
-body .post-content.prose :not(pre) > code::after {
-    content: none !important;
+.pagination { 
+    margin-top: 3rem; 
+    display: flex; 
+    justify-content: center; 
+    gap: 0.5rem; 
+    flex-wrap: wrap; 
+    list-style: none; 
+    padding: 0; 
 }
-
-body .post-content.prose pre code {
-    white-space: inherit !important;              
-    word-break: inherit !important;            
-    word-wrap: inherit !important;
-    background: transparent;       
-    padding: 0;
-    color: var(--text);
-    font-size: 0.9em;
-}
-
-body .post-content.prose :not(pre) > code {
-    white-space: pre-wrap !important;    
-    word-break: break-all !important;    
-    overflow-wrap: anywhere !important;  
-
-    
-    background: var(--teal-dim);
-    padding: 0.2rem 0.4rem;
-    border-radius: 6px;
-    font-size: 0.9em;
-    color: var(--teal);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    transition: background-color 0.5s ease;
-}
-
-body .post-content.prose pre::-webkit-scrollbar {
-    height: 6px; 
-}
-body .post-content.prose pre::-webkit-scrollbar-thumb {
-    background: var(--teal-dim);
-    border-radius: 3px;
-}
-body .post-content.prose pre::-webkit-scrollbar-thumb:hover {
-    background: var(--teal);
-}
-body .post-content.prose pre::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-body .post-content.prose table {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    display: block;
-    border-collapse: collapse;
-    margin: 1.5em 0;
-}
-body .post-content.prose th, body .post-content.prose td {
-    border: 1px solid var(--border);
-    padding: 0.75em 1em;
-}
-body .post-content.prose th { background-color: var(--teal-dim); }
-.pagination {
-    margin-top: 3rem;
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    list-style: none;
-    padding: 0;
-}
-.pagination li a, .pagination li span {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--card-bg);
-    color: var(--text-muted);
-    transition: all 0.3s ease;
-    text-decoration: none;
-    backdrop-filter: blur(8px);
+.pagination li a, 
+.pagination li span { 
+    display: inline-block; 
+    padding: 0.5rem 1rem; 
+    border: 1px solid var(--border); 
+    border-radius: 10px; 
+    background: var(--card-bg); 
+    color: var(--text-muted); 
+    transition: all 0.3s ease; 
+    text-decoration: none; 
+    backdrop-filter: blur(8px); 
 }
 .pagination li.current a, 
-.pagination li a:hover {
-    border-color: var(--teal);
-    background: var(--teal-dim);
-    color: var(--teal);
-    box-shadow: 0 0 15px var(--teal-glow);
-    transform: translateY(-2px);
+.pagination li a:hover { 
+    border-color: var(--teal); 
+    background: var(--teal-dim); 
+    color: var(--teal); 
+    box-shadow: 0 0 15px var(--teal-glow); 
+    transform: translateY(-2px); 
 }
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+
+@keyframes fadeUp { 
+    from { opacity: 0; transform: translateY(16px); } 
+    to { opacity: 1; transform: translateY(0); } 
 }
-.post-card {
-    animation: fadeUp 0.6s ease both;
-    background: var(--card-bg);
-    backdrop-filter: blur(8px);
-    transition: background-color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
+.post-card { 
+    animation: fadeUp 0.6s ease both; 
+    background: var(--card-bg); 
+    backdrop-filter: blur(8px); 
+    transition: background-color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease; 
 }
-.post-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px var(--teal-glow);
+.post-card:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 10px 30px var(--teal-glow); 
 }
+
 body #comments .comment-list, 
-body #comments .comment-list ol {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: block;
-    width: 100%;
+body #comments .comment-list ol { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    display: block; 
+    width: 100%; 
 }
-body #comments .comment-list li {
-    display: block;
-    width: 100%;
-    margin-top: 1.5rem;
+body #comments .comment-list li { 
+    display: block; 
+    width: 100%; 
+    margin-top: 1.5rem; 
 }
-body #comments .comment-body {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+body #comments .comment-body { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
 }
-body #comments .comment-author {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-    color: var(--text);
-    font-weight: 600;
+body #comments .comment-author { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.75rem; 
+    margin-bottom: 0.5rem; 
+    color: var(--text); 
+    font-weight: 600; 
 }
-body #comments .comment-author img.avatar {
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    border: 2px solid var(--teal-dim);
+body #comments .comment-author img.avatar { 
+    border-radius: 50%; 
+    width: 44px; 
+    height: 44px; 
+    border: 2px solid var(--teal-dim); 
 }
-body #comments .comment-meta {
-    font-size: 0.875rem;
-    color: var(--text-dim);
-    margin-bottom: 0.75rem;
+body #comments .comment-meta { 
+    font-size: 0.875rem; 
+    color: var(--text-dim); 
+    margin-bottom: 0.75rem; 
 }
-body #comments .comment-meta a {
-    color: var(--text-dim);
+body #comments .comment-meta a { 
+    color: var(--text-dim); 
 }
 body #comments .comment-content {
-    background: var(--bg2);
-    padding: 1.25rem;
-    border-radius: 0.75rem;
-    color: var(--text);
-    margin-bottom: 0.75rem;
-    word-wrap: break-word;
+    background: var(--bg2); 
+    padding: 1.25rem; 
+    border-radius: 0.75rem; 
+    color: var(--text); 
+    margin-bottom: 0.75rem; 
     border: 1px solid var(--border);
+    overflow-wrap: break-word; 
+    word-break: break-word; 
 }
-body #comments .comment-content p {
-    margin: 0;
+body #comments .comment-content p { 
+    margin: 0; 
 }
-body #comments .comment-reply {
-    align-self: flex-end;
-    font-size: 0.875rem;
+body #comments .comment-content a { 
+    color: var(--teal); 
+    text-decoration: underline; 
+    text-underline-offset: 2px; 
+    word-break: break-all; 
 }
-body #comments .comment-reply a {
-    color: var(--teal);
-    background: var(--teal-dim);
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    transition: all 0.3s ease;
-    text-decoration: none;
+body #comments .comment-content a:hover { 
+    text-shadow: 0 0 8px var(--teal-glow); 
 }
-body #comments .comment-reply a:hover {
-    background: var(--teal);
-    color: #fff;
-    box-shadow: 0 0 10px var(--teal-glow);
+body #comments .comment-reply { 
+    align-self: flex-end; 
+    font-size: 0.875rem; 
 }
-body #comments .comment-children {
-    margin-top: 1.5rem;
-    padding-left: 2rem;
-    border-left: 2px solid var(--teal-dim);
-    width: 100%;
+body #comments .comment-reply a { 
+    color: var(--teal); 
+    background: var(--teal-dim); 
+    padding: 0.25rem 0.75rem; 
+    border-radius: 9999px; 
+    transition: all 0.3s ease; 
+    text-decoration: none; 
 }
-@media (max-width: 768px) {
-    body #comments .comment-children {
-        padding-left: 1rem;
-    }
+body #comments .comment-reply a:hover { 
+    background: var(--teal); 
+    color: #fff; 
+    box-shadow: 0 0 10px var(--teal-glow); 
 }
-body #respond {
-    display: block;
-    width: 100%;
-    clear: both;
-    margin-top: 2rem;
+body #comments .comment-children { 
+    margin-top: 1.5rem; 
+    padding-left: 2rem; 
+    border-left: 2px solid var(--teal-dim); 
+    width: 100%; 
+}
+@media (max-width: 768px) { 
+    body #comments .comment-children { 
+        padding-left: 1rem; 
+    } 
+}
+body #respond { 
+    display: block; 
+    width: 100%; 
+    clear: both; 
+    margin-top: 2rem; 
 }

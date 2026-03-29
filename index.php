@@ -4,7 +4,7 @@
  * 
  * @package Netsuko
  * @author DuckXu
- * @version 1.0.1
+ * @version 1.0.2
  * @link https://duckxu.com
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
