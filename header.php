@@ -1,6 +1,7 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <!DOCTYPE html>
 <html lang="zh-CN" class="antialiased">
+
 <head>
     <meta charset="<?php $this->options->charset(); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -98,7 +99,14 @@
         }
     </script>
 
+
+        <?php if ($this->options->customHeadCode): ?>
+        <?php $this->options->customHeadCode(); ?>
+    <?php endif; ?>
+
     <?php $this->header(); ?>
+</head>
+
 </head>
 
 <body class="min-h-screen flex flex-col font-sans selection:bg-teal/30 selection:text-teal pt-16">

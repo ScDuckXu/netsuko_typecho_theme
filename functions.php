@@ -62,6 +62,34 @@ function themeConfig($form)
 
     $icpNum = new \Typecho\Widget\Helper\Form\Element\Text('icpNum', NULL, NULL, _t('ICP 备案号'), _t('例如：XICP备xxxxxx号。填写后会自动在页脚显示并链接到工信部，留空则隐藏。'));
     $form->addInput($icpNum);
+
+$customHeadCode = new \Typecho\Widget\Helper\Form\Element\Textarea(
+    'customHeadCode', 
+    NULL, 
+    NULL, 
+    _t('自定义头部代码 (CSS/JS)'), 
+    _t('在这里填入你的自定义 CSS (需包含 &lt;style&gt; 标签) 或 JS 脚本 (需包含 &lt;script&gt; 标签)，代码会输出在 &lt;head&gt; 标签结束前。')
+);
+$form->addInput($customHeadCode);
+
+$footerLinks = new \Typecho\Widget\Helper\Form\Element\Textarea(
+    'footerLinks', 
+    NULL, 
+    NULL, 
+    _t('底部自定义链接'), 
+    _t('一行一个，格式为：<strong>链接名称|链接地址</strong>。例如：<code>Google|https://google.com</code>')
+);
+$form->addInput($footerLinks);
+
+$icpUrl = new \Typecho\Widget\Helper\Form\Element\Text(
+    'icpUrl', 
+    NULL, 
+    'https://beian.miit.gov.cn/', 
+    _t('ICP备案链接地址'), 
+    _t('默认指向工信部官网。')
+);
+$form->addInput($icpUrl);
+
 }
 
 
