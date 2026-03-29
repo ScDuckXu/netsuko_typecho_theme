@@ -123,7 +123,15 @@ function getOS($agent) {
 }
 
 function threadedComments($comments, $options) {
-    $commentLevelClass = $comments->levels > 0 ? ' ml-8 md:ml-14 mt-6 border-l-2 border-teal/20 pl-4 md:pl-6' : ' mt-8';
+    // 限制嵌套缩进防溢出：0层无缩进；1-2层正常缩进；3层及以上取消左外边距，只保留左侧指示线
+    if ($comments->levels == 0) {
+        $commentLevelClass = ' mt-8';
+    } elseif ($comments->levels > 0 && $comments->levels <= 2) {
+        $commentLevelClass = ' ml-6 md:ml-10 mt-6 border-l-2 border-teal/20 pl-4 md:pl-6';
+    } else {
+        $commentLevelClass = ' mt-6 border-l-2 border-teal/20 pl-4 md:pl-6'; 
+    }
+
     ?>
     <li id="li-<?php $comments->theId(); ?>" class="comment-body<?php echo $commentLevelClass; ?> list-none">
         
