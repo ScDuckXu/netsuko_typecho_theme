@@ -1,4 +1,3 @@
-/*markdown的定义写在了header的60多行里，不然压不住Tailwind覆盖。*/
 :root {
     --teal: #39c5bb;
     --teal-dim: rgba(57,197,187,0.15);
