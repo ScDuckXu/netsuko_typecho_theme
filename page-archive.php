@@ -17,8 +17,15 @@ $this->need('header.php');
 
     <div class="bg-white dark:bg-darkCard rounded-3xl border border-gray-200/50 dark:border-white/5 shadow-sm p-8 md:p-12">
         <?php
+        // 翻页机制
         $stat = \Widget\Stat::alloc();
-        $this->widget('Widget_Contents_Post_Recent', 'pageSize=' . $stat->publishedPostsNum)->to($archives);
+        $pageSize = 50; // 每页显示的数量
+        $currentPage = $this->request->get('page', 1); // 获取当前页码，默认为 1
+        $totalPosts = $stat->publishedPostsNum;
+        $totalPages = ceil($totalPosts / $pageSize); // 计算总页数
+
+        // 按页码和每页数量查询
+        $this->widget('Widget_Contents_Post_Recent', 'pageSize=' . $pageSize . '&page=' . $currentPage)->to($archives);
         
         $year = 0; 
         $month = 0; 
@@ -68,7 +75,25 @@ $this->need('header.php');
         
         echo $output;
         ?>
+    </div> <?php if ($totalPages > 1): ?>
+    <div class="mt-12 flex justify-center items-center gap-4 text-sm font-medium">
+        <?php if ($currentPage > 1): ?>
+            <a href="?page=<?php echo $currentPage - 1; ?>" class="px-5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full text-gray-700 dark:text-gray-300 hover:text-teal hover:border-teal/50 transition-all duration-300">
+                &laquo; 更新的
+            </a>
+        <?php endif; ?>
+        
+        <span class="text-gray-400">
+            <?php echo $currentPage; ?> / <?php echo $totalPages; ?>
+        </span>
+
+        <?php if ($currentPage < $totalPages): ?>
+            <a href="?page=<?php echo $currentPage + 1; ?>" class="px-5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full text-gray-700 dark:text-gray-300 hover:text-teal hover:border-teal/50 transition-all duration-300">
+                更早的 &raquo;
+            </a>
+        <?php endif; ?>
     </div>
+    <?php endif; ?>
 
 </main>
 
