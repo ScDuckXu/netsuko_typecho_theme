@@ -24,10 +24,14 @@ $this->need('header.php');
         
         if (is_array($photos) && !empty($photos)) {
             foreach ($photos as $photo) {
-                $src = htmlspecialchars($photo['src'] ?? '');
-                $title = htmlspecialchars($photo['title'] ?? 'Untitled');
-                $desc = htmlspecialchars($photo['desc'] ?? '');
-                $date = htmlspecialchars($photo['date'] ?? '');
+                $raw_src = $photo['src'] ?? '';
+                // 1. URL 安全校验：仅允许 http:// 或 https:// 开头的合法图片链接，拦截恶意伪协议
+                $src = (preg_match('/^(https?):\/\//i', $raw_src)) ? htmlspecialchars($raw_src, ENT_QUOTES, 'UTF-8') : '';
+
+                // 2. 文本安全转义：加入 ENT_QUOTES，严格过滤单双引号，防止闭合 HTML 属性（如 data-caption 和 alt）
+                $title = htmlspecialchars($photo['title'] ?? 'Untitled', ENT_QUOTES, 'UTF-8');
+                $desc = htmlspecialchars($photo['desc'] ?? '', ENT_QUOTES, 'UTF-8');
+                $date = htmlspecialchars($photo['date'] ?? '', ENT_QUOTES, 'UTF-8');
                 
                 if (empty($src)) continue;
 

@@ -22,11 +22,14 @@ $this->need('header.php');
         
         if (is_array($links) && !empty($links)) {
             foreach ($links as $link) {
-                $name = htmlspecialchars($link['name'] ?? 'Unknown');
-                $url = htmlspecialchars($link['url'] ?? '#');
-                $desc = htmlspecialchars($link['desc'] ?? '');
-                $avatar = htmlspecialchars($link['avatar'] ?? 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=random');
+                $name = htmlspecialchars($link['name'] ?? 'Unknown', ENT_QUOTES, 'UTF-8');
+                $raw_url = $link['url'] ?? '#';
+                // URL 协议安全校验，防止 javascript: 伪协议注入
+                $url = (preg_match('/^(https?):\/\//i', $raw_url)) ? htmlspecialchars($raw_url, ENT_QUOTES, 'UTF-8') : '#';
+                $desc = htmlspecialchars($link['desc'] ?? '', ENT_QUOTES, 'UTF-8');
+                $raw_avatar = $link['avatar'] ?? 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=random';
                 
+                $avatar = (preg_match('/^(https?):\/\//i', $raw_avatar)) ? htmlspecialchars($raw_avatar, ENT_QUOTES, 'UTF-8') : 'https://ui-avatars.com/api/?name=Error';
                 echo '<a href="'.$url.'" target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-5 rounded-2xl bg-white dark:bg-darkCard border border-gray-100 dark:border-white/5 hover:border-teal/50 hover:-translate-y-1 hover:shadow-glow transition-all duration-300 group">';
                 echo '<img src="'.$avatar.'" alt="'.$name.'" class="w-14 h-14 rounded-full object-cover border-2 border-transparent group-hover:border-teal/50 transition-all">';
                 echo '<div class="flex-1 overflow-hidden">';
