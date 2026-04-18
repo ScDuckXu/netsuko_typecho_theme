@@ -12,7 +12,7 @@
             'author'    =>  _t('%s 发布的文章')
         ), '', ' - '); ?><?php $this->options->title(); ?></title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="stylesheet" href="<?php $this->options->themeUrl('style.css'); ?>?v=2.0">
 
     <script>
@@ -37,47 +37,6 @@
         }
     </script>
 
-        <style>
-        :root { --teal: #00d2ff; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.3); border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.15); }
-        ::-webkit-scrollbar-thumb:hover { background-color: var(--teal); }
-        
-        .text-glow { text-shadow: 0 0 20px rgba(0, 210, 255, 0.4); }
-        body { transition: background-color 0.5s ease, color 0.5s ease; }
-
-    
-        code, pre, pre code, .prose code, p code {
-            white-space: pre-wrap !important;     
-            word-wrap: break-word !important;     
-            word-break: break-all !important;     
-            overflow-wrap: anywhere !important; 
-            display: inline-block !important;     
-            max-width: 100% !important;         
-        }
-        
-        pre code {
-            display: block !important;
-        }
-        .post-content h1 { font-size: 1.875rem; font-weight: 700; margin: 2rem 0 1rem; color: var(--teal); font-family: 'Playfair Display', serif; }
-        .post-content h2 { font-size: 1.5rem; font-weight: 700; margin: 1.75rem 0 1rem; color: var(--teal); font-family: 'Playfair Display', serif; }
-        .post-content h3 { font-size: 1.25rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--teal); }
-        .post-content h4 { font-size: 1.125rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
-        .post-content h5 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
-        .post-content p { margin-bottom: 1.25rem; line-height: 1.8; }
-        .post-content a { color: var(--teal); text-decoration: none; border-bottom: 1px dashed var(--teal); word-break: break-word; }
-        .post-content a:hover { border-bottom-style: solid; text-shadow: 0 0 8px rgba(0, 210, 255, 0.4); }
-        .post-content ul { list-style-type: disc !important; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-        .post-content ol { list-style-type: decimal !important; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-        .post-content li { display: list-item !important; margin-bottom: 0.5rem; }
-        .post-content blockquote { border-left: 4px solid var(--teal); background: rgba(0, 210, 255, 0.1); padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
-        .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 1.5rem auto; border: 1px solid rgba(255,255,255,0.1); }
-        .post-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
-        .post-content th, .post-content td { border: 1px solid rgba(156, 163, 175, 0.3); padding: 0.6rem 1rem; }
-        .post-content th { background-color: rgba(0, 210, 255, 0.1); font-weight: 600; }
-    </style>
 
 
     <script>
@@ -107,7 +66,6 @@
     <?php $this->header(); ?>
 </head>
 
-</head>
 
 <body class="min-h-screen flex flex-col font-sans selection:bg-teal/30 selection:text-teal pt-16">
 
