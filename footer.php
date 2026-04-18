@@ -54,42 +54,31 @@
     </div>
 </footer>
 
-<?php $this->footer(); ?>
-
 <script>
 <?php $this->footer(); ?>
-        <button id="back-to-top" class="fixed bottom-8 right-8 z-50 p-3 bg-teal text-white rounded-full shadow-lg shadow-teal/30 opacity-0 pointer-events-none translate-y-5 transition-all duration-300 hover:bg-teal/90 hover:shadow-glow hover:-translate-y-1 focus:outline-none" aria-label="返回顶部">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-        </svg>
-    </button>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const backToTopBtn = document.getElementById('back-to-top');
-            
-            // 监听滚动事件，控制按钮的显示和隐藏
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 400) {
-                    // 页面向下滑动超过400px时显示
-                    backToTopBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-5');
-                    backToTopBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
-                } else {
-                    // 否则隐藏并带有向下的位移动画
-                    backToTopBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-5');
-                    backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
-                }
-            });
+<button id="back-to-top" class="fixed bottom-8 right-8 z-50 p-3 bg-teal text-white rounded-full shadow-lg shadow-teal/30 opacity-0 pointer-events-none translate-y-5 transition-all duration-300 hover:bg-teal/90 hover:shadow-glow hover:-translate-y-1 focus:outline-none" aria-label="返回顶部">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+</button>
 
-            // 点击平滑滚动到顶部
-            backToTopBtn.addEventListener('click', function() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            });
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const backToTopBtn = document.getElementById('back-to-top');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 400) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-5');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-5');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            }
         });
-
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
 </script>
 
 </body>
