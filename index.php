@@ -4,7 +4,7 @@
  * 
  * @package Netsuko
  * @author DuckXu
- * @version 1.0.3
+ * @version 1.1.0
  * @link https://duckxu.com
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -61,8 +61,7 @@ $this->need('header.php');
             <?php endif; ?>
 
             <div class="flex justify-between items-center py-4 font-medium">
-                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'flex gap-4', 'itemTag' => 'li', 'currentClass' => 'text-teal border-b-2 border-teal']); ?>
-            </div>
+                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'pagination flex gap-4', 'itemTag' => 'li', 'currentClass' => 'current']); ?>            </div>
         </div>
         
         <aside class="md:col-span-4 lg:col-span-3">

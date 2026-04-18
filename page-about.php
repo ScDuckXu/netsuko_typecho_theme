@@ -57,7 +57,7 @@ $this->need('header.php');
                     <?php endif; ?>
                 </div>
 
-                <div class="post-content <?php echo $this->options->postFont == 'serif' ? 'font-serif' : 'font-sans'; ?> text-gray-700 dark:text-gray-300 leading-relaxed transition-colors duration-500">
+                <div class="post-content prose prose-teal dark:prose-invert max-w-none <?php echo $this->options->postFont == 'serif' ? 'font-serif' : 'font-sans'; ?> text-gray-700 dark:text-gray-300 leading-relaxed transition-colors duration-500">
                     <?php $this->content(); ?>
                 </div>
             </div>

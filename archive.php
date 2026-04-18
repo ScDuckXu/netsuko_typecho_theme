@@ -56,7 +56,7 @@ $this->need('header.php');
             <?php endif; ?>
 
             <div class="flex justify-between items-center py-4 font-medium">
-                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'flex gap-4', 'itemTag' => 'li', 'currentClass' => 'text-teal border-b-2 border-teal']); ?>
+                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'pagination flex gap-4', 'itemTag' => 'li', 'currentClass' => 'current']); ?>
             </div>
         </div>
         
