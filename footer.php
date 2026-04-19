@@ -47,7 +47,7 @@
             </p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 Powered by <a href="http://typecho.org" target="_blank" class="hover:text-teal transition-colors">Typecho</a> 
-                & Theme <a href="https://github.com/your-theme-link" target="_blank" class="hover:text-teal transition-colors">Netsuko</a>
+                & Theme <a href="https://github.com/ScDuckXu/netsuko_typecho_theme" target="_blank" class="hover:text-teal transition-colors">Netsuko</a> by <a href="https://duckxu.com" target="_blank" class="hover:text-teal transition-colors">DuckXu</a>
             </p>
         </div>
 
