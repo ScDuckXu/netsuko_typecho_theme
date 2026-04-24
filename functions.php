@@ -3,23 +3,18 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 function themeConfig($form)
 {
-    $authorAvatar = new \Typecho\Widget\Helper\Form\Element\Text('authorAvatar', null, 'https://cravatar.cn/avatar/default?d=mp', _t('作者头像 URL'), _t('侧栏名片的圆角头像'));
-    $form->addInput($authorAvatar);
-
+    // 基础设置
+    
     $authorName = new \Typecho\Widget\Helper\Form\Element\Text('authorName', null, 'Netsuko', _t('作者显示姓名'), _t('侧边栏名片的名字'));
     $form->addInput($authorName);
 
-    $motto = new \Typecho\Widget\Helper\Form\Element\Text('motto', null, '你跳向自己的厄运是改变不了世界的', _t('全站座右铭'), _t('显示在首页 Banner 和侧栏名片中'));
-    $form->addInput($motto);
+    $authorAvatar = new \Typecho\Widget\Helper\Form\Element\Text('authorAvatar', null, 'https://cravatar.cn/avatar/default?d=mp', _t('作者头像 URL'), _t('侧栏名片的圆角头像'));
+    $form->addInput($authorAvatar);
 
-    $indexBanner = new \Typecho\Widget\Helper\Form\Element\Text(
-        'indexBanner',
-        NULL,
-        NULL,
-        _t('首页 Banner 图片'),
-        _t('填入图片 URL。如果留空，则默认显示纯色背景。')
-    );
-    $form->addInput($indexBanner);
+    $postFont = new \Typecho\Widget\Helper\Form\Element\Radio('postFont',
+        array('sans' => _t('无衬线体 (Sans-serif)'), 'serif' => _t('衬线体 (Serif)')),
+        'sans', _t('文章正文字体'), _t('选择正文阅读字体。'));
+    $form->addInput($postFont);
 
     $defaultThumb = new \Typecho\Widget\Helper\Form\Element\Text(
         'defaultThumb',
@@ -30,13 +25,10 @@ function themeConfig($form)
     );
     $form->addInput($defaultThumb);
 
-    $githubUrl = new \Typecho\Widget\Helper\Form\Element\Text('githubUrl', null, '', _t('GitHub 链接'), _t('社交图标链接'));
-    $form->addInput($githubUrl);
-    
-    $postFont = new \Typecho\Widget\Helper\Form\Element\Radio('postFont',
-        array('sans' => _t('无衬线体 (Sans-serif)'), 'serif' => _t('衬线体 (Serif)')),
-        'sans', _t('文章正文字体'), _t('选择正文阅读字体。'));
-    $form->addInput($postFont);
+    // Banner与座右铭设置
+
+    $motto = new \Typecho\Widget\Helper\Form\Element\Text('motto', null, '永远相信美好的事情即将发生', _t('全站座右铭'), _t('显示在首页 Banner 和侧栏名片中'));
+    $form->addInput($motto);
 
     $mottoFont = new \Typecho\Widget\Helper\Form\Element\Radio('mottoFont',
         array('playfair' => _t('衬线体 (Playfair Display)'), 'sans' => _t('无衬线体 (默认字体)')),
@@ -48,6 +40,65 @@ function themeConfig($form)
         'show', _t('座右铭双引号装饰'), _t('在座右铭两侧包裹双引号。'));
     $form->addInput($mottoQuotes);
 
+    $mottoColorLight = new \Typecho\Widget\Helper\Form\Element\Text(
+        'mottoColorLight',
+        NULL,
+        '#1f2937',
+        _t('首页座右铭颜色 (日间)'),
+        _t('填入 HEX 颜色代码（如 #39C5BB）。可根据 Banner 图像自行修改到合适颜色。')
+    );
+    $form->addInput($mottoColorLight);
+
+    $mottoColorDark = new \Typecho\Widget\Helper\Form\Element\Text(
+        'mottoColorDark',
+        NULL,
+        '#ffffff',
+        _t('首页座右铭颜色 (夜间)'),
+        _t('填入夜间模式下的 HEX 颜色代码。')
+    );
+    $form->addInput($mottoColorDark);
+
+    $indexBanner = new \Typecho\Widget\Helper\Form\Element\Text(
+        'indexBanner',
+        NULL,
+        NULL,
+        _t('首页 Banner 图片 (日间/默认)'),
+        _t('填入图片 URL。如果只用一张图，请填在这里。')
+    );
+    $form->addInput($indexBanner);
+
+    $indexBannerDark = new \Typecho\Widget\Helper\Form\Element\Text(
+        'indexBannerDark',
+        NULL,
+        NULL,
+        _t('首页 Banner 图片 (夜间模式)'),
+        _t('填入夜间模式下的图片 URL。如果留空，夜间模式将沿用上面的默认图。')
+    );
+    $form->addInput($indexBannerDark);
+
+    $indexBannerHeight = new \Typecho\Widget\Helper\Form\Element\Text(
+        'indexBannerHeight',
+        NULL,
+        '300',
+        _t('首页 Banner 高度 (px)'),
+        _t('填入纯数字（如 300 或 450），单位为像素。默认值为 300。')
+    );
+    $form->addInput($indexBannerHeight);
+
+    $bannerOpacity = new \Typecho\Widget\Helper\Form\Element\Text(
+        'bannerOpacity', 
+        NULL, 
+        '50', 
+        _t('首页 Banner 遮罩透明度'), 
+        _t('填入 0-100 的数字。数字越大遮罩越深（越黑），50 代表 50% 透明度。')
+    );
+    $form->addInput($bannerOpacity);
+
+    // 侧边栏与自定义链接
+
+    $githubUrl = new \Typecho\Widget\Helper\Form\Element\Text('githubUrl', null, '', _t('GitHub 链接'), _t('填写完整 URL，留空则不显示该图标。'));
+    $form->addInput($githubUrl);
+
     $socialTwitter = new \Typecho\Widget\Helper\Form\Element\Text('socialTwitter', NULL, NULL, _t('Twitter/X 链接'), _t('填写完整 URL，留空则不显示该图标。'));
     $form->addInput($socialTwitter);
     
@@ -56,40 +107,44 @@ function themeConfig($form)
 
     $socialEmail = new \Typecho\Widget\Helper\Form\Element\Text('socialEmail', NULL, NULL, _t('Email 邮箱地址'), _t('填写邮箱地址，留空则不显示该图标。'));
     $form->addInput($socialEmail);
+    
+    $socialDiscord = new \Typecho\Widget\Helper\Form\Element\Text('socialDiscord', NULL, NULL, _t('Discord 链接'), _t('填写 Discord 邀请链接。'));
+    $form->addInput($socialDiscord);
+
+    $socialInstagram = new \Typecho\Widget\Helper\Form\Element\Text('socialInstagram', NULL, NULL, _t('Instagram 链接'), _t('填写完整 URL。'));
+    $form->addInput($socialInstagram);
+
+    $socialBilibili = new \Typecho\Widget\Helper\Form\Element\Text('socialBilibili', NULL, NULL, _t('Bilibili 链接'), _t('填写个人主页 URL。'));
+    $form->addInput($socialBilibili);
+
+    $socialWechat = new \Typecho\Widget\Helper\Form\Element\Text('socialWechat', NULL, NULL, _t('微信二维码 URL'), _t('填入你的微信二维码图片链接。'));
+    $form->addInput($socialWechat);
 
     $sidebarLinks = new \Typecho\Widget\Helper\Form\Element\Textarea('sidebarLinks', NULL, NULL, _t('侧边栏自定义超链接'), _t('一行一个链接，格式为：名称|链接。例如：<br><code>链接名称|https://example.com</code><br>留空则不显示。'));
     $form->addInput($sidebarLinks);
 
+    //页脚部分
+
     $icpNum = new \Typecho\Widget\Helper\Form\Element\Text('icpNum', NULL, NULL, _t('ICP 备案号'), _t('例如：XICP备xxxxxx号。填写后会自动在页脚显示并链接到工信部，留空则隐藏。'));
     $form->addInput($icpNum);
 
-$customHeadCode = new \Typecho\Widget\Helper\Form\Element\Textarea(
-    'customHeadCode', 
-    NULL, 
-    NULL, 
-    _t('自定义头部代码 (CSS/JS)'), 
-    _t('在这里填入你的自定义 CSS (需包含 &lt;style&gt; 标签) 或 JS 脚本 (需包含 &lt;script&gt; 标签)，代码会输出在 &lt;head&gt; 标签结束前。')
-);
-$form->addInput($customHeadCode);
+    $icpUrl = new \Typecho\Widget\Helper\Form\Element\Text('icpUrl', NULL, 'https://beian.miit.gov.cn/', _t('ICP备案链接地址'), _t('默认指向工信部官网。'));
+    $form->addInput($icpUrl);
 
-$footerLinks = new \Typecho\Widget\Helper\Form\Element\Textarea(
-    'footerLinks', 
-    NULL, 
-    NULL, 
-    _t('底部自定义链接'), 
-    _t('一行一个，格式为：<strong>链接名称|链接地址</strong>。例如：<code>Google|https://google.com</code>')
-);
-$form->addInput($footerLinks);
+    $rssFeed = new \Typecho\Widget\Helper\Form\Element\Text('rssFeed', NULL, NULL, _t('RSS Feed URL'), _t('填入你的 RSS 订阅链接（通常是 /feed），留空则不显示。'));
+    $form->addInput($rssFeed);
 
-$icpUrl = new \Typecho\Widget\Helper\Form\Element\Text(
-    'icpUrl', 
-    NULL, 
-    'https://beian.miit.gov.cn/', 
-    _t('ICP备案链接地址'), 
-    _t('默认指向工信部官网。')
-);
-$form->addInput($icpUrl);
+    $siteStatusUrl = new \Typecho\Widget\Helper\Form\Element\Text('siteStatusUrl', NULL, NULL, _t('Status 页面 URL'), _t('填入你的监控页或状态页链接，留空则页脚不显示 Status 按钮。'));
+    $form->addInput($siteStatusUrl);
 
+    $customHeadCode = new \Typecho\Widget\Helper\Form\Element\Textarea(
+        'customHeadCode', 
+        NULL, 
+        NULL, 
+        _t('自定义头部代码 (CSS/JS)'), 
+        _t('在这里填入你的自定义 CSS (需包含 &lt;style&gt; 标签) 或 JS 脚本 (需包含 &lt;script&gt; 标签)，代码会输出在 &lt;head&gt; 标签结束前。')
+    );
+    $form->addInput($customHeadCode);
 }
 
 
@@ -111,6 +166,15 @@ function themeFields($layout) {
         _t('输入这篇文章的精简摘要。留空时首页将自动截取文章正文的前 30 个字。')
     );
     $layout->addItem($custom_excerpt);
+
+    $subtitle = new \Typecho\Widget\Helper\Form\Element\Text(
+        'subtitle', 
+        NULL, 
+        NULL, 
+        _t('页面副标题'), 
+        _t('显示在页面大标题下方的说明文字。留空则在部分模板下显示默认文案。')
+    );
+    $layout->addItem($subtitle);
 }
 
 
