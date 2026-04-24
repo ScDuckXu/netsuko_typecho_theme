@@ -14,7 +14,9 @@ $this->need('header.php');
     
     <header class="mb-12 text-center">
         <h1 class="text-3xl md:text-5xl font-playfair italic font-semibold text-gray-900 dark:text-white text-glow mb-4"><?php $this->title() ?></h1>
-        <p class="text-gray-500 dark:text-gray-400">Capture the moment.</p>
+        <p class="text-gray-500 dark:text-gray-400">
+            <?php echo $this->fields->subtitle ? $this->fields->subtitle : 'Capture the moment.'; ?>
+        </p>
     </header>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-16">

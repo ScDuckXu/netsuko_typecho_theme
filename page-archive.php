@@ -12,7 +12,9 @@ $this->need('header.php');
     
     <div class="text-center mb-16">
         <h1 class="text-4xl md:text-5xl font-playfair italic font-semibold text-gray-900 dark:text-white text-glow mb-4"><?php $this->title() ?></h1>
-        <p class="text-gray-500 dark:text-gray-400">Footprints in the digital void.</p>
+        <p class="text-gray-500 dark:text-gray-400">
+            <?php echo $this->fields->subtitle ? $this->fields->subtitle : 'Footprints in the digital void.'; ?>
+        </p>
     </div>
 
     <div class="bg-white dark:bg-darkCard rounded-3xl border border-gray-200/50 dark:border-white/5 shadow-sm p-8 md:p-12">
@@ -44,6 +46,16 @@ $this->need('header.php');
                     $output .= '</div></div>';
                 }
                 
+                // 【新增逻辑】如果是新的一年，渲染年份大轴节点
+                if ($year != $year_tmp) {
+                    $output .= '<div class="relative z-10 pt-2 pb-2 flex items-center">';
+                    // 轴线上的大圆点
+                    $output .= '<div class="absolute -left-[9px] w-4 h-4 bg-teal rounded-full shadow-glow ring-4 ring-white dark:ring-darkCard"></div>';
+                    // 年份大字
+                    $output .= '<h2 class="text-3xl md:text-4xl font-playfair italic font-bold text-gray-800 dark:text-gray-100 pl-8">' . $year_tmp . '</h2>';
+                    $output .= '</div>';
+                }
+                
                 $year = $year_tmp;
                 $month = $month_tmp;
                 $isFirstGroup = false;
@@ -51,15 +63,16 @@ $this->need('header.php');
                 // 开启新的月份组
                 $output .= '<div class="relative">';
 
-                $output .= '<div class="absolute -left-[29px] w-14 h-14 bg-white dark:bg-darkCard rounded-full flex items-center justify-center border-2 border-teal shadow-glow z-10">';
-                $output .= '<span class="text-sm font-bold text-teal text-center leading-tight">' . $year . '<br><span class="text-xs">' . $month . '</span></span>';
+                // 【优化逻辑】小圈只显示月份，并调整尺寸使其居中对齐轴线
+                $output .= '<div class="absolute -left-[25px] w-12 h-12 bg-white dark:bg-darkCard rounded-full flex items-center justify-center border-2 border-teal shadow-glow z-10">';
+                $output .= '<span class="text-base font-bold text-teal text-center">' . $month . '<span class="text-[10px] text-gray-400 font-normal ml-0.5">月</span></span>';
                 $output .= '</div>';
                 
                 // 开启这个月下的文章列表
                 $output .= '<div class="pl-16 pt-2 space-y-6">';
             }
             
-            // 文章单项
+            // 文章单项 (保持原有设计)
             $output .= '<article class="group relative">';
             $output .= '<div class="absolute -left-[45px] top-2 w-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-teal transition-colors"></div>';
             $output .= '<time class="text-xs text-gray-400 font-mono tracking-wider block mb-1">' . date('M d, Y', $archives->created) . '</time>';
@@ -75,7 +88,9 @@ $this->need('header.php');
         
         echo $output;
         ?>
-    </div> <?php if ($totalPages > 1): ?>
+    </div> 
+    
+    <?php if ($totalPages > 1): ?>
     <div class="mt-12 flex justify-center items-center gap-4 text-sm font-medium">
         <?php if ($currentPage > 1): ?>
             <a href="?page=<?php echo $currentPage - 1; ?>" class="px-5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full text-gray-700 dark:text-gray-300 hover:text-teal hover:border-teal/50 transition-all duration-300">

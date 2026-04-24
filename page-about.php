@@ -15,7 +15,11 @@ $this->need('header.php');
         <div class="h-48 md:h-64 relative bg-darkBg overflow-hidden flex justify-center items-center">
             <div class="absolute inset-0 opacity-40 pointer-events-none" style="background: radial-gradient(circle at center, var(--teal) 0%, transparent 70%); filter: blur(40px);"></div>
             <h1 class="text-4xl md:text-5xl <?php echo $this->options->mottoFont == 'sans' ? 'font-sans' : 'font-playfair italic'; ?> font-semibold text-white text-glow z-10 text-center px-4 transition-colors duration-500">
-                <?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->motto(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?>
+                <?php if ($this->fields->subtitle): ?>
+                    <?php echo $this->fields->subtitle; ?>
+                <?php else: ?>
+                    <?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->motto(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?>
+                <?php endif; ?>
             </h1>
         </div>
 

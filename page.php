@@ -11,6 +11,9 @@ $this->need('header.php');
         <h1 class="text-3xl md:text-5xl font-semibold text-white text-glow mb-4 transition-all duration-500">
             <?php $this->title() ?>
         </h1>
+        <?php if ($this->fields->subtitle): ?>
+            <p class="text-lg text-gray-200 opacity-90 mt-4"><?php echo $this->fields->subtitle; ?></p>
+        <?php endif; ?>
     </div>
 </div>
 
