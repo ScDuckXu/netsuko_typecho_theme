@@ -1,27 +1,61 @@
 <?php
 /**
  * 使用Tailwind CSS书写。https://github.com/ScDuckXu/netsuko_typecho_theme
- * 
  * @package Netsuko
  * @author DuckXu
- * @version 1.1.0
+ * @version 1.1.1
  * @link https://duckxu.com
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 $this->need('header.php');
 ?>
 
-<?php $bannerUrl = $this->options->indexBanner; ?>
-<div class="w-full relative py-20 md:py-32 mb-12 flex items-center justify-center overflow-hidden border-b border-gray-200/50 dark:border-white/5 <?php echo $bannerUrl ? 'bg-cover bg-center' : 'bg-white/30 dark:bg-darkCard/30 backdrop-blur-md'; ?>" <?php if($bannerUrl) echo 'style="background-image: url(\''.$bannerUrl.'\');"'; ?>>
+<?php 
+$bannerUrl = $this->options->indexBanner;
+$bannerDarkUrl = $this->options->indexBannerDark;
+$bannerHeight = $this->options->indexBannerHeight ? $this->options->indexBannerHeight : '300'; 
+$bannerOpacity = ($this->options->bannerOpacity !== null) ? intval($this->options->bannerOpacity) / 100 : 0.5;
+
+// 获取自定义颜色设置
+$mottoColorLight = $this->options->mottoColorLight ? $this->options->mottoColorLight : '#1f2937';
+$mottoColorDark = $this->options->mottoColorDark ? $this->options->mottoColorDark : '#ffffff';
+
+$hasBanner = $bannerUrl || $bannerDarkUrl;
+?>
+
+<style>
+    /* Banner 背景逻辑 */
+    <?php if($hasBanner): ?>
+    #home-banner {
+        background-image: url('<?php echo $bannerUrl ? $bannerUrl : $bannerDarkUrl; ?>');
+    }
+    <?php if($bannerDarkUrl): ?>
+    html.dark #home-banner {
+        background-image: url('<?php echo $bannerDarkUrl; ?>') !important;
+    }
+    <?php endif; ?>
+    <?php endif; ?>
+
+    /* 座右铭配色逻辑 */
+    #home-motto {
+        color: <?php echo $mottoColorLight; ?>;
+    }
+    html.dark #home-motto {
+        color: <?php echo $mottoColorDark; ?> !important;
+    }
+</style>
+
+<div id="home-banner" class="w-full relative mb-12 flex items-center justify-center overflow-hidden border-b border-gray-200/50 dark:border-white/5 <?php echo $hasBanner ? 'bg-cover bg-center' : 'bg-white/30 dark:bg-darkCard/30 backdrop-blur-md'; ?>" 
+     style="min-height: <?php echo $bannerHeight; ?>px;">
     
-    <?php if($bannerUrl): ?>
-        <div class="absolute inset-0 z-0 bg-black/50 pointer-events-none"></div>
+    <?php if($hasBanner): ?>
+        <div class="absolute inset-0 z-0 pointer-events-none" style="background-color: rgba(0,0,0, <?php echo $bannerOpacity; ?>);"></div>
     <?php else: ?>
         <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background: radial-gradient(circle at center, var(--teal) 0%, transparent 60%); filter: blur(40px);"></div>
     <?php endif; ?>
 
     <div class="relative z-10 text-center px-4">
-        <h1 class="text-3xl md:text-5xl <?php echo $this->options->mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold <?php echo $bannerUrl ? 'text-white' : 'text-gray-900 dark:text-white'; ?> text-glow transition-all duration-500">
+        <h1 id="home-motto" class="text-3xl md:text-5xl <?php echo $this->options->mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold text-glow transition-all duration-500">
             <?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->motto(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?>
         </h1>
     </div>
@@ -45,7 +79,6 @@ $this->need('header.php');
                             </div>
                             <div class="post-content text-gray-600 dark:text-gray-300 leading-relaxed text-sm line-clamp-3">
                                 <?php 
-                                    // 摘要判断逻辑：有自定义摘要则输出自定义，没有则截取前30字
                                     if ($this->fields->custom_excerpt) {
                                         echo $this->fields->custom_excerpt;
                                     } else {
@@ -61,7 +94,8 @@ $this->need('header.php');
             <?php endif; ?>
 
             <div class="flex justify-between items-center py-4 font-medium">
-                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'pagination flex gap-4', 'itemTag' => 'li', 'currentClass' => 'current']); ?>            </div>
+                <?php $this->pageNav('&laquo; Prev', 'Next &raquo;', 3, '...', ['wrapTag' => 'ul', 'wrapClass' => 'pagination flex gap-4', 'itemTag' => 'li', 'currentClass' => 'current']); ?>
+            </div>
         </div>
         
         <aside class="md:col-span-4 lg:col-span-3">
