@@ -132,7 +132,7 @@ function themeConfig($form)
         array('off' => _t('默认关闭'), 'on' => _t('默认开启')),
         'off',
         _t('LaTeX 默认状态'),
-        _t('默认关闭更稳妥。可在每篇文章或独立页的自定义字段中单独覆盖。')
+        _t('默认关闭更稳妥。可在每篇文章或独立页的自定义字段中单独修改。')
     );
     $form->addInput($latexDefaultEnabled);
 
@@ -186,7 +186,7 @@ function themeConfig($form)
     $form->addInput($bangumiCacheHours);
 
     // Banner与座右铭设置
-    netsukoConfigSection($form, '首页 Banner 与座右铭', '控制首页视觉焦点、座右铭样式和 Banner 展示效果。');
+    netsukoConfigSection($form, '首页 Banner 与座右铭', '控制首页座右铭样式和 Banner 展示效果。');
 
     $mottoBanner = new \Typecho\Widget\Helper\Form\Element\Text('mottoBanner', null, '永远相信美好的事情即将发生', _t('Banner 文本'), _t('显示在首页 Banner 中，默认与座右铭一致'));
     $form->addInput($mottoBanner);
@@ -289,7 +289,7 @@ function themeConfig($form)
     $form->addInput($sidebarLinks);
 
     //页脚部分
-    netsukoConfigSection($form, '页脚与站点信息', '备案、RSS 与状态页等站点级链接。');
+    netsukoConfigSection($form, '页脚与站点信息', '备案、RSS 与状态页等链接。');
 
     $icpNum = new \Typecho\Widget\Helper\Form\Element\Text('icpNum', NULL, NULL, _t('ICP 备案号'), _t('例如：XICP备xxxxxx号。填写后会自动在页脚显示并链接到工信部，留空则隐藏。'));
     $form->addInput($icpNum);
@@ -314,7 +314,7 @@ function themeConfig($form)
     );
     $form->addInput($customHeadCode);
 
-    netsukoConfigSection($form, '评论与安全', '访客评论验证码与后续评论通知能力会集中放在这里。');
+    netsukoConfigSection($form, '评论与安全', '访客评论验证码与后续评论通知。');
 
     $commentCaptchaMode = new \Typecho\Widget\Helper\Form\Element\Radio(
         'commentCaptchaMode',
