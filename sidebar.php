@@ -1,3 +1,9 @@
+<?php
+$authorName = netsukoOption('authorName', 'Netsuko');
+$authorAvatar = netsukoOption('authorAvatar', 'https://cravatar.cn/avatar/default?d=mp');
+$authorMotto = netsukoOption('motto', '永远相信美好的事情即将发生');
+$mottoQuotes = netsukoOption('mottoQuotes', 'show');
+?>
 <aside class="space-y-6 sticky top-20">
     <div class="mb-6">
         <form method="post" action="<?php $this->options->siteUrl(); ?>" class="relative group" role="search">
@@ -10,10 +16,10 @@
 
     <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-glow transition-shadow duration-500 mb-8">
         <div class="flex items-center gap-4 mb-6">
-            <img src="<?php echo netsukoUrl($this->options->authorAvatar); ?>" alt="Avatar" class="w-16 h-16 rounded-2xl object-cover" />
+            <img src="<?php echo netsukoUrl($authorAvatar); ?>" alt="<?php echo netsukoEscape($authorName); ?>" class="w-16 h-16 rounded-2xl object-cover" />
             <div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white"><?php $this->options->authorName(); ?></h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->motto(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?></p>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white"><?php echo netsukoEscape($authorName); ?></h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><?php echo $mottoQuotes == 'show' ? '"' : ''; ?><?php echo netsukoEscape($authorMotto); ?><?php echo $mottoQuotes == 'show' ? '"' : ''; ?></p>
             </div>
         </div>
         

@@ -3,7 +3,7 @@
  * 悦己绮世，自由如风。https://github.com/ScDuckXu/netsuko_typecho_theme
  * @package Netsuko
  * @author Nazuki_Etsuko
- * @version 1.2.2
+ * @version 1.2.3.1
  * @link https://duckxu.com
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -11,14 +11,18 @@ $this->need('header.php');
 ?>
 
 <?php 
-$bannerUrl = $this->options->indexBanner;
-$bannerDarkUrl = $this->options->indexBannerDark;
-$bannerHeight = $this->options->indexBannerHeight ? $this->options->indexBannerHeight : '300'; 
-$bannerOpacity = ($this->options->bannerOpacity !== null) ? intval($this->options->bannerOpacity) / 100 : 0.5;
+$bannerUrl = (string) $this->options->indexBanner;
+$bannerDarkUrl = (string) $this->options->indexBannerDark;
+$bannerHeight = (int) netsukoOption('indexBannerHeight', '300');
+$bannerHeight = max(160, min(800, $bannerHeight));
+$bannerOpacity = max(0, min(100, (int) netsukoOption('bannerOpacity', '50'))) / 100;
+$mottoBanner = netsukoOption('mottoBanner', netsukoOption('motto', '永远相信美好的事情即将发生'));
+$mottoFont = netsukoOption('mottoFont', 'playfair');
+$mottoQuotes = netsukoOption('mottoQuotes', 'show');
 
 // 获取自定义颜色设置
-$mottoColorLight = netsukoColor($this->options->mottoColorLight, '#1f2937');
-$mottoColorDark = netsukoColor($this->options->mottoColorDark, '#ffffff');
+$mottoColorLight = netsukoColor(netsukoOption('mottoColorLight', '#1f2937'), '#1f2937');
+$mottoColorDark = netsukoColor(netsukoOption('mottoColorDark', '#ffffff'), '#ffffff');
 
 $hasBanner = $bannerUrl || $bannerDarkUrl;
 ?>
@@ -55,8 +59,8 @@ $hasBanner = $bannerUrl || $bannerDarkUrl;
     <?php endif; ?>
 
     <div class="relative z-10 text-center px-4">
-        <h1 id="home-motto" class="text-3xl md:text-5xl <?php echo $this->options->mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold text-glow transition-all duration-500">
-            <?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->mottoBanner(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?>
+        <h1 id="home-motto" class="text-3xl md:text-5xl <?php echo $mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold text-glow transition-all duration-500">
+            <?php echo $mottoQuotes == 'show' ? '"' : ''; ?><?php echo netsukoEscape($mottoBanner); ?><?php echo $mottoQuotes == 'show' ? '"' : ''; ?>
         </h1>
     </div>
 </div>
@@ -80,7 +84,7 @@ $hasBanner = $bannerUrl || $bannerDarkUrl;
                         
                         <div class="p-6 md:p-8 sm:w-2/3 flex flex-col justify-center relative z-10 bg-white dark:bg-darkCard">
                             <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal transition-colors mb-2">
-                                <a itemprop="url" href="<?php $this->permalink() ?>"><?php $this->title() ?></a>
+                                <a itemprop="url" href="<?php $this->permalink() ?>"><?php if ($this->hidden): ?><?php _e('此内容被密码保护'); ?><?php else: ?><?php $this->title(); ?><?php endif; ?></a>
                             </h2>
                             <div class="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-4">
                                 <time datetime="<?php $this->date('c'); ?>"><?php $this->date(); ?></time>
@@ -88,7 +92,9 @@ $hasBanner = $bannerUrl || $bannerDarkUrl;
                             </div>
                             <div class="post-content text-gray-600 dark:text-gray-300 leading-relaxed text-sm line-clamp-3">
                                 <?php 
-                                    if ($this->fields->custom_excerpt) {
+                                    if ($this->hidden) {
+                                        _e('请输入密码访问');
+                                    } elseif ($this->fields->custom_excerpt) {
                                         echo netsukoEscape($this->fields->custom_excerpt);
                                     } else {
                                         $this->excerpt(30, '...'); 

@@ -30,15 +30,17 @@ $this->need('header.php');
                         
                         <div class="p-6 md:p-8 sm:w-2/3 flex flex-col justify-center relative z-10 bg-white dark:bg-darkCard">
                             <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal transition-colors mb-2">
-                                <a itemprop="url" href="<?php $this->permalink() ?>"><?php $this->title() ?></a>
+                                <a itemprop="url" href="<?php $this->permalink() ?>"><?php if ($this->hidden): ?><?php _e('此内容被密码保护'); ?><?php else: ?><?php $this->title(); ?><?php endif; ?></a>
                             </h2>
                             <div class="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-4">
                                 <time datetime="<?php $this->date('c'); ?>"><?php $this->date(); ?></time>
                                 <span><?php $this->category(','); ?></span>
                             </div>
                             <div class="post-content text-gray-600 dark:text-gray-300 leading-relaxed text-sm line-clamp-3">
-                                <?php 
-                                    if ($this->fields->custom_excerpt) {
+                                <?php
+                                    if ($this->hidden) {
+                                        _e('请输入密码访问');
+                                    } elseif ($this->fields->custom_excerpt) {
                                         echo netsukoEscape($this->fields->custom_excerpt);
                                     } else {
                                         $this->excerpt(30, '...'); 

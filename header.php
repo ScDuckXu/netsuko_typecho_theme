@@ -1,10 +1,10 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <!DOCTYPE html>
-<html lang="zh-CN" class="antialiased">
+<html lang="zh-CN" class="antialiased" data-netsuko-palette="<?php echo netsukoEscape(netsukoThemePalette()); ?>">
 
 <head>
     <meta charset="<?php $this->options->charset(); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php $this->archiveTitle(array(
             'category'  =>  _t('分类 %s 下的文章'),
             'search'    =>  _t('包含关键字 %s 的文章'),
@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="<?php echo netsukoEscape(netsukoVersionedAssetUrl(netsukoTailwindCssUrl())); ?>">
     <link rel="stylesheet" href="<?php echo netsukoEscape(netsukoVersionedAssetUrl(netsukoThemeAssetUrl('style.css'))); ?>">
+    <link rel="icon" href="<?php echo netsukoEscape(netsukoVersionedAssetUrl(netsukoThemeAssetUrl('img/favicon.png'))); ?>" type="image/png">
 
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -43,7 +44,7 @@
 </head>
 
 
-<body class="min-h-screen flex flex-col font-sans pt-16">
+<body class="min-h-screen flex flex-col pt-16">
 
 
     <header id="header" class="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-darkBg/70 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 transition-colors duration-500">

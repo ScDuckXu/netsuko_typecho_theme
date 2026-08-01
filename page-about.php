@@ -6,6 +6,11 @@
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 $this->need('header.php');
+$authorName = netsukoOption('authorName', 'Netsuko');
+$authorAvatar = netsukoOption('authorAvatar', 'https://cravatar.cn/avatar/default?d=mp');
+$authorMotto = netsukoOption('motto', '永远相信美好的事情即将发生');
+$mottoFont = netsukoOption('mottoFont', 'playfair');
+$mottoQuotes = netsukoOption('mottoQuotes', 'show');
 ?>
 
 <main class="flex-grow w-full max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-20 z-10 relative">
@@ -14,28 +19,35 @@ $this->need('header.php');
         
         <div class="h-48 md:h-64 relative bg-darkBg overflow-hidden flex justify-center items-center">
             <div class="absolute inset-0 opacity-40 pointer-events-none" style="background: radial-gradient(circle at center, var(--teal) 0%, transparent 70%); filter: blur(40px);"></div>
-            <h1 class="text-4xl md:text-5xl <?php echo $this->options->mottoFont == 'sans' ? 'font-sans' : 'font-playfair italic'; ?> font-semibold text-white text-glow z-10 text-center px-4 transition-colors duration-500">
+            <h1 class="text-4xl md:text-5xl <?php echo $mottoFont == 'sans' ? 'font-sans' : 'font-playfair italic'; ?> font-semibold text-white text-glow z-10 text-center px-4 transition-colors duration-500">
                 <?php if ($this->fields->subtitle): ?>
                     <?php echo netsukoEscape($this->fields->subtitle); ?>
                 <?php else: ?>
-                    <?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?><?php $this->options->motto(); ?><?php echo $this->options->mottoQuotes == 'show' ? '"' : ''; ?>
+                    <?php echo $mottoQuotes == 'show' ? '"' : ''; ?><?php echo netsukoEscape($authorMotto); ?><?php echo $mottoQuotes == 'show' ? '"' : ''; ?>
                 <?php endif; ?>
             </h1>
         </div>
 
         <div class="relative px-6 md:px-12 pb-12">
             <div class="absolute -top-16 left-6 md:left-12">
-                <img src="<?php echo netsukoUrl($this->options->authorAvatar); ?>" alt="Avatar" class="w-32 h-32 rounded-3xl object-cover border-4 border-white dark:border-darkCard shadow-xl bg-white dark:bg-darkCard transition-all duration-500" />
+                <img src="<?php echo netsukoUrl($authorAvatar); ?>" alt="<?php echo netsukoEscape($authorName); ?>" class="w-32 h-32 rounded-3xl object-cover border-4 border-white dark:border-darkCard shadow-xl bg-white dark:bg-darkCard transition-all duration-500" />
             </div>
             
             <div class="pt-20">
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-500"><?php $this->options->authorName(); ?></h2>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-500"><?php echo netsukoEscape($authorName); ?></h2>
                 
                 <div class="flex flex-wrap items-center gap-4 mb-8">
                     <?php if ($this->options->githubUrl): ?>
                     <a href="<?php echo netsukoUrl($this->options->githubUrl); ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-gray-500 hover:text-teal transition-colors">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
                         GitHub
+                    </a>
+                    <?php endif; ?>
+
+                    <?php if ($this->options->socialInstagram): ?>
+                    <a href="<?php echo netsukoUrl($this->options->socialInstagram); ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-gray-500 hover:text-teal transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke-width="2"></rect><circle cx="12" cy="12" r="4" stroke-width="2"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+                        Instagram
                     </a>
                     <?php endif; ?>
 
@@ -54,15 +66,15 @@ $this->need('header.php');
                     <?php endif; ?>
 
                     <?php if ($this->options->socialEmail): ?>
-                    <a href="mailto:<?php echo netsukoEscape($this->options->socialEmail); ?>" class="flex items-center gap-2 text-sm text-gray-500 hover:text-teal transition-colors">
+                    <a href="<?php echo netsukoMailto($this->options->socialEmail); ?>" class="flex items-center gap-2 text-sm text-gray-500 hover:text-teal transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         Email
                     </a>
                     <?php endif; ?>
                 </div>
 
-                <div class="post-content prose prose-teal dark:prose-invert max-w-none <?php echo $this->options->postFont == 'serif' ? 'font-serif' : 'font-sans'; ?> text-gray-700 dark:text-gray-300 leading-relaxed transition-colors duration-500">
-                    <?php $this->content(); ?>
+                <div class="post-content prose prose-teal dark:prose-invert max-w-none <?php echo netsukoOption('postFont', 'sans') == 'serif' ? 'font-serif' : 'font-sans'; ?> text-gray-700 dark:text-gray-300 leading-relaxed transition-colors duration-500" data-netsuko-reading data-netsuko-latex="<?php echo netsukoLatexEnabled($this) ? 'on' : 'off'; ?>">
+                    <?php echo netsukoRenderPostContent($this); ?>
                 </div>
             </div>
         </div>

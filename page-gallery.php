@@ -24,19 +24,32 @@ $fancyboxAssets = netsukoFancyboxAssets();
         <?php
         $jsonStr = trim($this->text);
         $photos = json_decode($jsonStr, true);
-        
-        if (is_array($photos) && !empty($photos)) {
-            foreach ($photos as $photo) {
-                $raw_src = $photo['src'] ?? '';
-                // 1. URL 安全校验：仅允许 http:// 或 https:// 开头的合法图片链接，拦截恶意伪协议
-                $src = (preg_match('/^(https?):\/\//i', $raw_src)) ? htmlspecialchars($raw_src, ENT_QUOTES, 'UTF-8') : '';
+        $validPhotos = [];
+        foreach (is_array($photos) ? $photos : [] as $photo) {
+            if (!is_array($photo)) {
+                continue;
+            }
 
-                // 2. 文本安全转义：加入 ENT_QUOTES，严格过滤单双引号，防止闭合 HTML 属性（如 data-caption 和 alt）
-                $title = htmlspecialchars($photo['title'] ?? 'Untitled', ENT_QUOTES, 'UTF-8');
-                $desc = htmlspecialchars($photo['desc'] ?? '', ENT_QUOTES, 'UTF-8');
-                $date = htmlspecialchars($photo['date'] ?? '', ENT_QUOTES, 'UTF-8');
-                
-                if (empty($src)) continue;
+            $rawSrc = trim((string) ($photo['src'] ?? ''));
+            $scheme = strtolower((string) parse_url($rawSrc, PHP_URL_SCHEME));
+            if (!filter_var($rawSrc, FILTER_VALIDATE_URL) || !in_array($scheme, ['http', 'https'], true)) {
+                continue;
+            }
+
+            $validPhotos[] = [
+                'src' => netsukoUrl($rawSrc),
+                'title' => netsukoEscape($photo['title'] ?? 'Untitled'),
+                'desc' => netsukoEscape($photo['desc'] ?? ''),
+                'date' => netsukoEscape($photo['date'] ?? '')
+            ];
+        }
+
+        if (!empty($validPhotos)) {
+            foreach ($validPhotos as $photo) {
+                $src = $photo['src'];
+                $title = $photo['title'];
+                $desc = $photo['desc'];
+                $date = $photo['date'];
 
                 echo '<div class="group bg-white dark:bg-darkCard rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden hover:border-teal/50 hover:-translate-y-1 hover:shadow-glow transition-all duration-300 flex flex-col">';
                 
@@ -62,9 +75,9 @@ $fancyboxAssets = netsukoFancyboxAssets();
             }
         } else {
             echo '<div class="col-span-full p-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 rounded-2xl text-red-600 dark:text-red-400 text-sm">';
-            echo '<strong>画廊数据加载失败：</strong> 请确保在编辑器正文中填写了合法的 JSON 数组。';
-            echo '</div>';
-            echo '<code>[<br>  {<br>    "src": "https://example.com/photo.jpg",<br>    "title": "落日余晖",<br>    "desc": "在海边散步时拍下的美丽夕阳。",<br>    "date": "2025-10-01"<br>  }<br>]</code>';
+            echo '<strong>画廊数据加载失败：</strong> 请确保正文是 JSON 数组，并至少包含一个有效的 HTTP(S) 图片地址。';
+            $example = "[\n  {\n    \"src\": \"https://example.com/photo.jpg\",\n    \"title\": \"落日余晖\",\n    \"desc\": \"在海边散步时拍下的美丽夕阳。\",\n    \"date\": \"2025-10-01\"\n  }\n]";
+            echo '<pre class="mt-4 whitespace-pre-wrap break-words"><code>' . netsukoEscape($example) . '</code></pre>';
             echo '</div>';
         }
         ?>

@@ -20,20 +20,27 @@ $this->need('header.php');
     <div class="bg-white dark:bg-darkCard rounded-3xl border border-gray-200/50 dark:border-white/5 shadow-sm p-8 md:p-12">
         <?php
         // 翻页机制
-        $stat = \Widget\Stat::alloc();
         $pageSize = 50;
-        $totalPosts = (int) $stat->publishedPostsNum;
+        $db = \Typecho\Db::get();
+        $now = (int) $this->options->time;
+        $totalPosts = (int) $db->fetchObject(
+            $db->select(['COUNT(table.contents.cid)' => 'num'])
+                ->from('table.contents')
+                ->where('table.contents.type = ?', 'post')
+                ->where('table.contents.status = ?', 'publish')
+                ->where('table.contents.created < ?', $now)
+        )->num;
         $totalPages = max(1, (int) ceil($totalPosts / $pageSize));
         $currentPage = max(1, (int) $this->request->get('page', 1));
         $currentPage = min($currentPage, $totalPages);
 
         // 按页码和每页数量查询
-        $db = \Typecho\Db::get();
         $archives = $db->fetchAll(
-            $db->select('table.contents.cid', 'table.contents.title', 'table.contents.slug', 'table.contents.type', 'table.contents.created')
+            $db->select('table.contents.cid', 'table.contents.title', 'table.contents.slug', 'table.contents.type', 'table.contents.created', 'table.contents.password', 'table.contents.authorId')
                 ->from('table.contents')
                 ->where('table.contents.type = ?', 'post')
                 ->where('table.contents.status = ?', 'publish')
+                ->where('table.contents.created < ?', $now)
                 ->order('table.contents.created', \Typecho\Db::SORT_DESC)
                 ->page($currentPage, $pageSize)
         );
@@ -74,7 +81,7 @@ $this->need('header.php');
 
                 // 【优化逻辑】小圈只显示月份，并调整尺寸使其居中对齐轴线
                 $output .= '<div class="absolute -left-[25px] w-12 h-12 bg-white dark:bg-darkCard rounded-full flex items-center justify-center border-2 border-teal shadow-glow z-10">';
-                $output .= '<span class="text-base font-bold text-teal text-center">' . $month . '<span class="text-[10px] text-gray-400 font-normal ml-0.5">月</span></span>';
+                $output .= '<span class="text-base font-bold text-teal text-center">' . $month_tmp . '<span class="text-[10px] text-gray-400 font-normal ml-0.5">月</span></span>';
                 $output .= '</div>';
                 
                 // 开启这个月下的文章列表
@@ -85,7 +92,7 @@ $this->need('header.php');
             $output .= '<article class="group relative">';
             $output .= '<div class="absolute -left-[45px] top-2 w-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-teal transition-colors"></div>';
             $output .= '<time class="text-xs text-gray-400 font-mono tracking-wider block mb-1">' . date('M d, Y', (int) $archive['created']) . '</time>';
-            $output .= '<a href="' . netsukoUrl(netsukoContentPermalink($archive)) . '" class="text-lg font-medium text-gray-800 dark:text-gray-200 group-hover:text-teal transition-colors block">' . netsukoEscape($archive['title']) . '</a>';
+            $output .= '<a href="' . netsukoUrl(netsukoContentPermalink($archive)) . '" class="text-lg font-medium text-gray-800 dark:text-gray-200 group-hover:text-teal transition-colors block">' . netsukoEscape(netsukoContentTitle($archive)) . '</a>';
             $output .= '</article>';
         }
         

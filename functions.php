@@ -36,6 +36,23 @@ function themeConfig($form)
     );
     $form->addInput($defaultThumb);
 
+    netsukoConfigSection($form, '主题配色', '选择全站强调色预设。页面背景继续使用中性色，避免配色过度单一。');
+
+    $colorScheme = new \Typecho\Widget\Helper\Form\Element\Select(
+        'colorScheme',
+        array(
+            'miku' => _t('初音青 (#39C5BB)'),
+            'sakura' => _t('樱花粉 (#E85D8F)'),
+            'amber' => _t('琥珀金 (#D68A24)'),
+            'iris' => _t('鸢尾蓝 (#5B7CDB)'),
+            'forest' => _t('森林绿 (#2F9E67)')
+        ),
+        'miku',
+        _t('预制主题配色'),
+        _t('控制链接、按钮、边框、进度条和光晕等全站强调色。')
+    );
+    $form->addInput($colorScheme);
+
     netsukoConfigSection($form, '静态资源', '选择 Tailwind CSS 与 Fancybox 的加载来源。默认使用主题内置本地资源。');
 
     $assetSourceOptions = array(
@@ -139,10 +156,39 @@ function themeConfig($form)
     );
     $form->addInput($pjaxExcludePaths);
 
+    netsukoConfigSection($form, '追番页面', '读取 Bangumi 公开个人资料和动画收藏，并使用本地缓存降低外部接口压力。');
+
+    $bangumiProfile = new \Typecho\Widget\Helper\Form\Element\Text(
+        'bangumiProfile',
+        NULL,
+        NULL,
+        _t('Bangumi 个人主页或用户名'),
+        _t('例如 https://bgm.tv/user/username 或 username。创建独立页面并选择“追番”模板后生效。')
+    );
+    $form->addInput($bangumiProfile);
+
+    $bangumiItemsPerStatus = new \Typecho\Widget\Helper\Form\Element\Text(
+        'bangumiItemsPerStatus',
+        NULL,
+        '24',
+        _t('每种状态显示数量'),
+        _t('范围 1-50，默认 24。分别读取想看、看过、在看、搁置和抛弃。')
+    );
+    $form->addInput($bangumiItemsPerStatus);
+
+    $bangumiCacheHours = new \Typecho\Widget\Helper\Form\Element\Text(
+        'bangumiCacheHours',
+        NULL,
+        '6',
+        _t('Bangumi 缓存时间（小时）'),
+        _t('范围 1-168，默认 6。接口暂时不可用时会继续显示上一次成功缓存。')
+    );
+    $form->addInput($bangumiCacheHours);
+
     // Banner与座右铭设置
     netsukoConfigSection($form, '首页 Banner 与座右铭', '控制首页视觉焦点、座右铭样式和 Banner 展示效果。');
 
-    $mottoBanner = new \Typecho\Widget\Helper\Form\Element\Text('mottoBanner', null, Helper::options()->motto, _t('Banner 文本'), _t('显示在首页 Banner 中，默认与座右铭一致'));
+    $mottoBanner = new \Typecho\Widget\Helper\Form\Element\Text('mottoBanner', null, '永远相信美好的事情即将发生', _t('Banner 文本'), _t('显示在首页 Banner 中，默认与座右铭一致'));
     $form->addInput($mottoBanner);
 
     $motto = new \Typecho\Widget\Helper\Form\Element\Text('motto', null, '永远相信美好的事情即将发生', _t('座右铭'), _t('显示在侧栏名片中'));
@@ -342,6 +388,7 @@ function themeConfig($form)
     $commentMailOwnerStatuses = new \Typecho\Widget\Helper\Form\Element\Checkbox(
         'commentMailOwnerStatuses',
         array(
+            'none' => _t('不发送任何状态通知'),
             'approved' => _t('提醒已通过评论'),
             'waiting' => _t('提醒待审核评论'),
             'spam' => _t('提醒垃圾评论')
@@ -432,7 +479,12 @@ function themeConfig($form)
     $commentMailTimeout = new \Typecho\Widget\Helper\Form\Element\Text('commentMailTimeout', NULL, '10', _t('SMTP 超时秒数'), _t('建议 5-30 秒。'));
     $form->addInput($commentMailTimeout);
 
-    netsukoConfigSection($form, '自动备份邮件', '按设置间隔生成 Typecho 兼容数据备份，并通过上方 SMTP 配置发送到指定邮箱。');
+    $autoBackupStatus = netsukoRuntimeOption('netsukoAutoBackupLastStatus', '尚未执行');
+    netsukoConfigSection(
+        $form,
+        '自动备份邮件',
+        '按设置间隔生成 Typecho 兼容数据备份，并通过上方 SMTP 配置发送到指定邮箱。最近状态：' . $autoBackupStatus
+    );
 
     $autoBackupEnabled = new \Typecho\Widget\Helper\Form\Element\Radio(
         'autoBackupEnabled',
@@ -652,6 +704,7 @@ function netsukoConfigBackupTools($form): void {
         'authorAvatar',
         'postFont',
         'defaultThumb',
+        'colorScheme',
         'tailwindAssetSource',
         'tailwindCustomUrl',
         'fancyboxAssetSource',
@@ -662,6 +715,9 @@ function netsukoConfigBackupTools($form): void {
         'latexDefaultEnabled',
         'pjaxEnabled',
         'pjaxExcludePaths',
+        'bangumiProfile',
+        'bangumiItemsPerStatus',
+        'bangumiCacheHours',
         'mottoBanner',
         'motto',
         'mottoFont',
@@ -1058,6 +1114,17 @@ function netsukoEscape($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+function netsukoOption(string $name, $default = '') {
+    $options = \Typecho\Widget::widget('Widget_Options');
+    $value = $options->{$name};
+    return $value === null || $value === '' ? $default : $value;
+}
+
+function netsukoThemePalette(): string {
+    $palette = (string) netsukoOption('colorScheme', 'miku');
+    return in_array($palette, ['miku', 'sakura', 'amber', 'iris', 'forest'], true) ? $palette : 'miku';
+}
+
 function netsukoUrl($value, string $fallback = '#') {
     $url = trim((string) $value);
     if ($url === '') {
@@ -1072,6 +1139,312 @@ function netsukoUrl($value, string $fallback = '#') {
     }
 
     return netsukoEscape($url);
+}
+
+function netsukoBangumiUsername($value): string {
+    $value = trim(strip_tags((string) $value));
+    if ($value === '') {
+        return '';
+    }
+
+    if (preg_match('~(?:https?://)?(?:www\.)?(?:bgm\.tv|bangumi\.tv|chii\.in)/user/([^/?#\s<]+)~iu', $value, $matches)) {
+        $value = rawurldecode($matches[1]);
+    } else {
+        $value = preg_replace('/\s+/u', '', $value);
+    }
+
+    return preg_match('/^[\p{L}\p{N}_.-]{1,64}$/u', $value) ? $value : '';
+}
+
+function netsukoBangumiStates(): array {
+    return [
+        3 => ['key' => 'doing', 'label' => '在看'],
+        2 => ['key' => 'collect', 'label' => '看过'],
+        1 => ['key' => 'wish', 'label' => '想看'],
+        4 => ['key' => 'on_hold', 'label' => '搁置'],
+        5 => ['key' => 'dropped', 'label' => '抛弃']
+    ];
+}
+
+function netsukoBangumiPageData($archive): array {
+    $configured = trim((string) netsukoOption('bangumiProfile', ''));
+    $source = $configured !== '' ? $configured : (string) ($archive->text ?? '');
+    $username = netsukoBangumiUsername($source);
+    if ($username === '') {
+        return [
+            'username' => '',
+            'profile' => [],
+            'groups' => [],
+            'fetchedAt' => 0,
+            'stale' => false,
+            'error' => 'Bangumi 个人主页或用户名尚未配置'
+        ];
+    }
+
+    $limit = max(1, min(50, (int) netsukoOption('bangumiItemsPerStatus', '24')));
+    $cacheHours = max(1, min(168, (int) netsukoOption('bangumiCacheHours', '6')));
+    $cachePath = netsukoUploadPath('netsuko-bangumi-' . substr(hash('sha256', strtolower($username) . ':' . $limit), 0, 20) . '.json');
+    $cached = netsukoReadBangumiCache($cachePath, $username);
+    $cacheFresh = $cached && (int) ($cached['fetchedAt'] ?? 0) >= time() - ($cacheHours * 3600);
+
+    if ($cacheFresh) {
+        $cached['stale'] = false;
+        $cached['error'] = '';
+        return $cached;
+    }
+
+    try {
+        $payload = netsukoFetchBangumiPayload($username, $limit);
+        netsukoWriteBangumiCache($cachePath, $payload);
+        $payload['stale'] = false;
+        $payload['error'] = '';
+        return $payload;
+    } catch (\Throwable $e) {
+        if ($cached) {
+            $cached['stale'] = true;
+            $cached['error'] = 'Bangumi 暂时无法更新，正在显示上一次成功缓存';
+            return $cached;
+        }
+
+        return [
+            'username' => $username,
+            'profile' => [],
+            'groups' => [],
+            'fetchedAt' => 0,
+            'stale' => false,
+            'error' => 'Bangumi 数据加载失败：' . $e->getMessage()
+        ];
+    }
+}
+
+function netsukoReadBangumiCache(string $path, string $username): ?array {
+    if (!is_file($path) || !is_readable($path)) {
+        return null;
+    }
+
+    $decoded = json_decode((string) file_get_contents($path), true);
+    if (!is_array($decoded) || (string) ($decoded['username'] ?? '') !== $username || !isset($decoded['groups']) || !is_array($decoded['groups'])) {
+        return null;
+    }
+
+    return $decoded;
+}
+
+function netsukoWriteBangumiCache(string $path, array $payload): void {
+    $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($encoded === false || file_put_contents($path, $encoded, LOCK_EX) === false) {
+        throw new \RuntimeException('无法写入 Bangumi 缓存');
+    }
+}
+
+function netsukoFetchBangumiPayload(string $username, int $limit): array {
+    $encodedUser = rawurlencode($username);
+    $urls = [
+        'profile' => 'https://api.bgm.tv/v0/users/' . $encodedUser
+    ];
+
+    foreach (netsukoBangumiStates() as $type => $state) {
+        $urls[$state['key']] = 'https://api.bgm.tv/v0/users/' . $encodedUser . '/collections?subject_type=2&type=' . $type . '&limit=' . $limit . '&offset=0';
+    }
+
+    $responses = netsukoHttpGetJsonBatch($urls, 8);
+    foreach ($urls as $key => $_) {
+        if (empty($responses[$key]['ok'])) {
+            throw new \RuntimeException((string) ($responses[$key]['error'] ?? '接口请求失败'));
+        }
+    }
+
+    $profileData = $responses['profile']['data'];
+    $profile = [
+        'username' => (string) ($profileData['username'] ?? $username),
+        'nickname' => trim((string) ($profileData['nickname'] ?? '')) ?: $username,
+        'avatar' => netsukoBangumiHttpsUrl($profileData['avatar']['large'] ?? ($profileData['avatar']['medium'] ?? '')),
+        'sign' => trim((string) ($profileData['sign'] ?? '')),
+        'url' => 'https://bgm.tv/user/' . rawurlencode($username)
+    ];
+
+    $groups = [];
+    foreach (netsukoBangumiStates() as $state) {
+        $response = $responses[$state['key']]['data'];
+        $items = [];
+        foreach (is_array($response['data'] ?? null) ? $response['data'] : [] as $item) {
+            $normalized = netsukoNormalizeBangumiItem($item);
+            if ($normalized) {
+                $items[] = $normalized;
+            }
+        }
+        $groups[] = [
+            'key' => $state['key'],
+            'label' => $state['label'],
+            'total' => max(count($items), (int) ($response['total'] ?? 0)),
+            'items' => $items
+        ];
+    }
+
+    return [
+        'username' => $username,
+        'profile' => $profile,
+        'groups' => $groups,
+        'fetchedAt' => time()
+    ];
+}
+
+function netsukoNormalizeBangumiItem($item): ?array {
+    if (!is_array($item) || !empty($item['private']) || !is_array($item['subject'] ?? null)) {
+        return null;
+    }
+
+    $subject = $item['subject'];
+    $id = (int) ($subject['id'] ?? ($item['subject_id'] ?? 0));
+    if ($id <= 0) {
+        return null;
+    }
+
+    $title = trim((string) ($subject['name_cn'] ?? '')) ?: trim((string) ($subject['name'] ?? ''));
+    if ($title === '') {
+        return null;
+    }
+
+    $originalTitle = trim((string) ($subject['name'] ?? ''));
+    $watched = max(0, (int) ($item['ep_status'] ?? 0));
+    $total = max(0, (int) ($subject['total_episodes'] ?? ($subject['eps'] ?? 0)));
+    $progress = $total > 0 ? min(100, (int) round(($watched / $total) * 100)) : 0;
+    $images = is_array($subject['images'] ?? null) ? $subject['images'] : [];
+    $rating = is_array($subject['rating'] ?? null) ? $subject['rating'] : [];
+    $rawScore = is_numeric($subject['score'] ?? null) ? $subject['score'] : ($rating['score'] ?? 0);
+    $rawRank = is_numeric($subject['rank'] ?? null) ? $subject['rank'] : ($rating['rank'] ?? 0);
+    $summary = trim((string) ($subject['short_summary'] ?? ''));
+    if ($summary === '') {
+        $summary = trim((string) ($subject['summary'] ?? ''));
+    }
+    $tags = [];
+    foreach (is_array($item['tags'] ?? null) ? $item['tags'] : [] as $tag) {
+        $tag = trim((string) $tag);
+        if ($tag !== '') {
+            $tags[] = $tag;
+        }
+        if (count($tags) >= 3) {
+            break;
+        }
+    }
+
+    return [
+        'id' => $id,
+        'url' => 'https://bgm.tv/subject/' . $id,
+        'title' => $title,
+        'originalTitle' => $originalTitle !== $title ? $originalTitle : '',
+        'image' => netsukoBangumiHttpsUrl($images['large'] ?? ($images['common'] ?? ($images['medium'] ?? ''))),
+        'summary' => $summary,
+        'date' => trim((string) ($subject['date'] ?? '')),
+        'score' => max(0, min(10, (float) $rawScore)),
+        'rank' => max(0, (int) $rawRank),
+        'watched' => $watched,
+        'totalEpisodes' => $total,
+        'progress' => $progress,
+        'rate' => max(0, min(10, (int) ($item['rate'] ?? 0))),
+        'comment' => trim((string) ($item['comment'] ?? '')),
+        'tags' => $tags
+    ];
+}
+
+function netsukoBangumiHttpsUrl($value): string {
+    $url = trim((string) $value);
+    if (strpos($url, '//') === 0) {
+        $url = 'https:' . $url;
+    }
+    if (stripos($url, 'http://') === 0) {
+        $url = 'https://' . substr($url, 7);
+    }
+    return filter_var($url, FILTER_VALIDATE_URL) && strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https' ? $url : '';
+}
+
+function netsukoHttpGetJsonBatch(array $urls, int $timeout = 8): array {
+    $timeout = max(2, min(20, $timeout));
+    if (!function_exists('curl_multi_init')) {
+        $results = [];
+        foreach ($urls as $key => $url) {
+            $results[$key] = netsukoHttpGetJson((string) $url, $timeout);
+        }
+        return $results;
+    }
+
+    $multi = curl_multi_init();
+    $handles = [];
+    foreach ($urls as $key => $url) {
+        $handle = curl_init((string) $url);
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => min(4, $timeout),
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            CURLOPT_USERAGENT => 'Netsuko-Typecho/' . netsukoThemeVersion() . ' (+https://github.com/ScDuckXu/netsuko_typecho_theme)'
+        ]);
+        curl_multi_add_handle($multi, $handle);
+        $handles[$key] = $handle;
+    }
+
+    do {
+        $status = curl_multi_exec($multi, $active);
+    } while ($status === CURLM_CALL_MULTI_PERFORM);
+
+    while ($active && $status === CURLM_OK) {
+        $selected = curl_multi_select($multi, 1.0);
+        if ($selected === -1) {
+            usleep(10000);
+        }
+
+        do {
+            $status = curl_multi_exec($multi, $active);
+        } while ($status === CURLM_CALL_MULTI_PERFORM);
+    }
+
+    $results = [];
+    foreach ($handles as $key => $handle) {
+        $body = (string) curl_multi_getcontent($handle);
+        $code = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        $error = curl_error($handle);
+        $decoded = $body !== '' ? json_decode($body, true) : null;
+        $ok = $error === '' && $code >= 200 && $code < 300 && is_array($decoded);
+        $results[$key] = [
+            'ok' => $ok,
+            'data' => $ok ? $decoded : [],
+            'error' => $error !== '' ? $error : ($code > 0 ? 'Bangumi 返回 HTTP ' . $code : 'Bangumi 未返回有效数据')
+        ];
+        curl_multi_remove_handle($multi, $handle);
+        curl_close($handle);
+    }
+    curl_multi_close($multi);
+
+    return $results;
+}
+
+function netsukoHttpGetJson(string $url, int $timeout): array {
+    if (!filter_var($url, FILTER_VALIDATE_URL) || strtolower((string) parse_url($url, PHP_URL_SCHEME)) !== 'https') {
+        return ['ok' => false, 'data' => [], 'error' => '无效的 HTTPS 接口地址'];
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => $timeout,
+            'ignore_errors' => true,
+            'header' => "Accept: application/json\r\nUser-Agent: Netsuko-Typecho/" . netsukoThemeVersion() . " (+https://github.com/ScDuckXu/netsuko_typecho_theme)\r\n"
+        ]
+    ]);
+    $body = @file_get_contents($url, false, $context);
+    $code = 0;
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('#^HTTP/\S+\s+(\d{3})#i', $header, $matches)) {
+            $code = (int) $matches[1];
+        }
+    }
+    $decoded = is_string($body) ? json_decode($body, true) : null;
+    $ok = $code >= 200 && $code < 300 && is_array($decoded);
+    return [
+        'ok' => $ok,
+        'data' => $ok ? $decoded : [],
+        'error' => $code > 0 ? 'Bangumi 返回 HTTP ' . $code : 'Bangumi 请求失败'
+    ];
 }
 
 function netsukoDevicesPayload($archive): array {
@@ -1199,12 +1572,14 @@ function netsukoDeviceSpecs($specs): array {
 
 function netsukoStickyPosts(int $limit = 20): array {
     $db = \Typecho\Db::get();
+    $options = \Typecho\Widget::widget('Widget_Options');
     $rows = $db->fetchAll(
         $db->select('table.contents.*')
             ->from('table.contents')
             ->join('table.fields', 'table.contents.cid = table.fields.cid')
             ->where('table.contents.type = ?', 'post')
             ->where('table.contents.status = ?', 'publish')
+            ->where('table.contents.created < ?', $options->time)
             ->where('table.fields.name = ?', 'stickyPost')
             ->where('table.fields.str_value = ?', 'on')
             ->order('table.contents.created', \Typecho\Db::SORT_DESC)
@@ -1238,13 +1613,38 @@ function netsukoContentFields(int $cid): array {
     return $fields;
 }
 
+function netsukoContentIsProtected(array $content): bool {
+    $password = (string) ($content['password'] ?? '');
+    if ($password === '') {
+        return false;
+    }
+
+    $cid = (int) ($content['cid'] ?? 0);
+    if ($cid > 0 && $password === (string) \Typecho\Cookie::get('protectPassword_' . $cid)) {
+        return false;
+    }
+
+    $user = \Widget\User::alloc();
+    if ((int) ($content['authorId'] ?? 0) === (int) $user->uid || $user->pass('editor', true)) {
+        return false;
+    }
+
+    return true;
+}
+
+function netsukoContentTitle(array $content): string {
+    return netsukoContentIsProtected($content)
+        ? (string) _t('此内容被密码保护')
+        : (string) ($content['title'] ?? '');
+}
+
 function netsukoContentThumb(array $content): string {
     $fields = $content['fields'] ?? [];
-    if (!empty($fields['thumb'])) {
+    if (!netsukoContentIsProtected($content) && !empty($fields['thumb'])) {
         return (string) $fields['thumb'];
     }
 
-    if (preg_match_all('/<img\b[^>]*?\bsrc=[\'"]([^\'"]+)[\'"][^>]*>/i', (string) ($content['text'] ?? ''), $matches) && isset($matches[1][0])) {
+    if (!netsukoContentIsProtected($content) && preg_match_all('/<img\b[^>]*?\bsrc=[\'"]([^\'"]+)[\'"][^>]*>/i', (string) ($content['text'] ?? ''), $matches) && isset($matches[1][0])) {
         return $matches[1][0];
     }
 
@@ -1257,6 +1657,10 @@ function netsukoContentThumb(array $content): string {
 }
 
 function netsukoContentExcerpt(array $content, int $length = 90): string {
+    if (netsukoContentIsProtected($content)) {
+        return (string) _t('请输入密码访问');
+    }
+
     $fields = $content['fields'] ?? [];
     if (!empty($fields['custom_excerpt'])) {
         return (string) $fields['custom_excerpt'];
@@ -1274,7 +1678,7 @@ function netsukoContentExcerpt(array $content, int $length = 90): string {
 
 function netsukoRenderPostCardFromArray(array $post, bool $sticky = false): void {
     $permalink = netsukoContentPermalink($post);
-    $title = netsukoEscape($post['title'] ?? '');
+    $title = netsukoEscape(netsukoContentTitle($post));
     $thumb = netsukoCssUrl(netsukoContentThumb($post));
     $created = (int) ($post['created'] ?? time());
     $excerpt = netsukoEscape(netsukoContentExcerpt($post, 90));
@@ -1351,7 +1755,7 @@ function netsukoTailwindCssUrl(): string {
         case 'jsdelivr':
             return 'https://cdn.jsdelivr.net/gh/ScDuckXu/netsuko_typecho_theme@main/assets/css/tailwind.css';
         case 'github':
-            return 'https://raw.githubusercontent.com/ScDuckXu/netsuko_typecho_theme/main/assets/css/tailwind.css';
+            return 'https://cdn.statically.io/gh/ScDuckXu/netsuko_typecho_theme@main/assets/css/tailwind.css';
         case 'local':
         default:
             return $local;
@@ -1379,8 +1783,8 @@ function netsukoFancyboxAssets(): array {
             ];
         case 'github':
             return [
-                'css' => 'https://raw.githubusercontent.com/fancyapps/ui/main/dist/fancybox/fancybox.css',
-                'js' => 'https://raw.githubusercontent.com/fancyapps/ui/main/dist/fancybox/fancybox.umd.js'
+                'css' => 'https://cdn.statically.io/gh/fancyapps/ui@main/dist/fancybox/fancybox.css',
+                'js' => 'https://cdn.statically.io/gh/fancyapps/ui@main/dist/fancybox/fancybox.umd.js'
             ];
         case 'local':
         default:
@@ -1470,42 +1874,55 @@ function netsukoPreparePostContent(string $html): string {
 }
 
 function netsukoApplyNativeLazyLoad(string $html): string {
-    if ($html === '') {
+    if ($html === '' || !class_exists('DOMDocument')) {
         return $html;
     }
 
-    return preg_replace_callback('/<(img|iframe)\b([^>]*)>/i', static function ($matches) {
-        $tag = strtolower($matches[1]);
-        $attrs = $matches[2];
-        $selfClosing = (bool) preg_match('/\/\s*$/', $attrs);
+    $document = new \DOMDocument('1.0', 'UTF-8');
+    $previousErrors = libxml_use_internal_errors(true);
+    $loaded = $document->loadHTML(
+        '<?xml encoding="UTF-8"><div id="netsuko-content-root">' . $html . '</div>',
+        LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+    );
+    libxml_clear_errors();
+    libxml_use_internal_errors($previousErrors);
 
-        if ($selfClosing) {
-            $attrs = (string) preg_replace('/\/\s*$/', '', $attrs);
-        }
+    if (!$loaded) {
+        return $html;
+    }
 
-        if (preg_match('/\sdata-no-lazy(?:\s*=\s*(["\']).*?\1|\s|$)/i', $attrs)) {
-            return $matches[0];
-        }
+    $root = $document->getElementById('netsuko-content-root');
+    if (!$root) {
+        return $html;
+    }
 
-        if (!preg_match('/\sloading\s*=/i', $attrs)) {
-            $attrs .= ' loading="lazy"';
-        }
-
-        if ($tag === 'img' && !preg_match('/\sdecoding\s*=/i', $attrs)) {
-            $attrs .= ' decoding="async"';
-        }
-
-        if (preg_match('/\sclass\s*=\s*(["\'])(.*?)\1/i', $attrs, $classMatch)) {
-            if (!preg_match('/(^|\s)netsuko-lazy-media(\s|$)/', $classMatch[2])) {
-                $updatedClass = $classMatch[1] . trim($classMatch[2] . ' netsuko-lazy-media') . $classMatch[1];
-                $attrs = preg_replace('/\sclass\s*=\s*(["\']).*?\1/i', ' class=' . $updatedClass, $attrs, 1);
+    foreach (['img', 'iframe'] as $tag) {
+        foreach ($root->getElementsByTagName($tag) as $node) {
+            if ($node->hasAttribute('data-no-lazy')) {
+                continue;
             }
-        } else {
-            $attrs .= ' class="netsuko-lazy-media"';
-        }
 
-        return '<' . $matches[1] . $attrs . ($selfClosing ? ' /' : '') . '>';
-    }, $html) ?? $html;
+            if (!$node->hasAttribute('loading')) {
+                $node->setAttribute('loading', 'lazy');
+            }
+            if ($tag === 'img' && !$node->hasAttribute('decoding')) {
+                $node->setAttribute('decoding', 'async');
+            }
+
+            $classes = preg_split('/\s+/u', trim($node->getAttribute('class')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            if (!in_array('netsuko-lazy-media', $classes, true)) {
+                $classes[] = 'netsuko-lazy-media';
+                $node->setAttribute('class', implode(' ', $classes));
+            }
+        }
+    }
+
+    $result = '';
+    foreach ($root->childNodes as $child) {
+        $result .= $document->saveHTML($child);
+    }
+
+    return $result;
 }
 
 function netsukoApplyCommentPagination(): void {
@@ -1655,7 +2072,8 @@ function netsukoCommentCaptchaFooter($archive): void {
         return;
     }
 
-    echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' . PHP_EOL;
+    echo '<script>window.netsukoTurnstileLoaded=function(){if(window.NetsukoTheme&&typeof window.NetsukoTheme.initTurnstile==="function"){window.NetsukoTheme.initTurnstile(document);}};</script>' . PHP_EOL;
+    echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=netsukoTurnstileLoaded&amp;render=explicit" async defer data-netsuko-turnstile-api="true"></script>' . PHP_EOL;
 }
 
 function netsukoVerifyCommentCaptcha($comment, $content = null) {
@@ -1855,6 +2273,10 @@ function netsukoOwnerStatusAllowed(string $status): bool {
     $allowed = $options->commentMailOwnerStatuses;
     if (!is_array($allowed)) {
         $allowed = $allowed ? [$allowed] : ['approved', 'waiting'];
+    }
+
+    if (in_array('none', $allowed, true)) {
+        return false;
     }
 
     return in_array($status, $allowed, true);
@@ -2081,7 +2503,14 @@ function netsukoSmtpSend(string $toEmail, string $toName, string $subject, strin
         netsukoSmtpCommand($socket, 'MAIL FROM:<' . $config['fromEmail'] . '>', [250]);
         netsukoSmtpCommand($socket, 'RCPT TO:<' . $toEmail . '>', [250, 251]);
         netsukoSmtpCommand($socket, 'DATA', [354]);
-        netsukoSmtpWrite($socket, netsukoBuildMailMessage($toEmail, $toName, $subject, $html, $config, $attachments) . "\r\n.");
+        $hasFileAttachment = array_filter($attachments, static function ($attachment) {
+            return !empty($attachment['path']);
+        });
+        if ($hasFileAttachment) {
+            netsukoSmtpWriteFileMessage($socket, $toEmail, $toName, $subject, $html, $config, $attachments);
+        } else {
+            netsukoSmtpWrite($socket, netsukoBuildMailMessage($toEmail, $toName, $subject, $html, $config, $attachments) . "\r\n.");
+        }
         netsukoSmtpExpect($socket, [250]);
         netsukoSmtpCommand($socket, 'QUIT', [221]);
     } finally {
@@ -2136,6 +2565,68 @@ function netsukoBuildMailMessage(string $toEmail, string $toName, string $subjec
     return implode("\r\n", $headers) . "\r\n\r\n" . $body;
 }
 
+function netsukoSmtpWriteFileMessage($socket, string $toEmail, string $toName, string $subject, string $html, array $config, array $attachments): void {
+    $boundary = '=_netsuko_' . bin2hex(random_bytes(12));
+    $headers = [
+        'Date: ' . date(DATE_RFC2822),
+        'From: ' . netsukoMailAddress($config['fromEmail'], $config['fromName']),
+        'To: ' . netsukoMailAddress($toEmail, $toName),
+        'Subject: ' . netsukoMailHeaderEncode($subject),
+        'MIME-Version: 1.0',
+        'Message-ID: <' . bin2hex(random_bytes(16)) . '@' . netsukoSmtpHostname() . '>',
+        'Content-Type: multipart/mixed; boundary="' . $boundary . '"'
+    ];
+
+    if (!empty($config['replyTo']) && filter_var($config['replyTo'], FILTER_VALIDATE_EMAIL)) {
+        array_splice($headers, 5, 0, 'Reply-To: ' . netsukoMailAddress($config['replyTo'], $config['fromName']));
+    }
+
+    netsukoSmtpWriteRaw($socket, implode("\r\n", $headers) . "\r\n\r\n");
+    netsukoSmtpWriteRaw($socket, '--' . $boundary . "\r\n");
+    netsukoSmtpWriteRaw($socket, "Content-Type: text/html; charset=UTF-8\r\n");
+    netsukoSmtpWriteRaw($socket, "Content-Transfer-Encoding: base64\r\n\r\n");
+    netsukoSmtpWriteRaw($socket, chunk_split(base64_encode($html)) . "\r\n");
+
+    foreach ($attachments as $attachment) {
+        $path = (string) ($attachment['path'] ?? '');
+        if ($path === '' || !is_file($path) || !is_readable($path)) {
+            throw new \RuntimeException('Mail attachment is not readable');
+        }
+
+        $filename = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) ($attachment['filename'] ?? basename($path)));
+        $filename = trim((string) $filename, '-_') ?: 'attachment.dat';
+        $contentType = preg_match('/^[A-Za-z0-9.+-]+\/[A-Za-z0-9.+-]+$/', (string) ($attachment['contentType'] ?? ''))
+            ? (string) $attachment['contentType']
+            : 'application/octet-stream';
+
+        netsukoSmtpWriteRaw($socket, '--' . $boundary . "\r\n");
+        netsukoSmtpWriteRaw($socket, 'Content-Type: ' . $contentType . '; name="' . $filename . '"' . "\r\n");
+        netsukoSmtpWriteRaw($socket, "Content-Transfer-Encoding: base64\r\n");
+        netsukoSmtpWriteRaw($socket, 'Content-Disposition: attachment; filename="' . $filename . '"' . "\r\n\r\n");
+
+        $handle = fopen($path, 'rb');
+        if (!$handle) {
+            throw new \RuntimeException('Mail attachment could not be opened');
+        }
+        try {
+            while (!feof($handle)) {
+                $chunk = fread($handle, 7296);
+                if ($chunk === false) {
+                    throw new \RuntimeException('Mail attachment could not be read');
+                }
+                if ($chunk !== '') {
+                    netsukoSmtpWriteRaw($socket, chunk_split(base64_encode($chunk), 76, "\r\n"));
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+        netsukoSmtpWriteRaw($socket, "\r\n");
+    }
+
+    netsukoSmtpWriteRaw($socket, '--' . $boundary . "--\r\n.\r\n");
+}
+
 function netsukoMailAddress(string $email, string $name = ''): string {
     $email = trim($email);
     $name = trim($name);
@@ -2166,7 +2657,19 @@ function netsukoSmtpCommand($socket, string $command, array $expect): string {
 }
 
 function netsukoSmtpWrite($socket, string $line): void {
-    fwrite($socket, $line . "\r\n");
+    netsukoSmtpWriteRaw($socket, $line . "\r\n");
+}
+
+function netsukoSmtpWriteRaw($socket, string $data): void {
+    $length = strlen($data);
+    $written = 0;
+    while ($written < $length) {
+        $result = fwrite($socket, substr($data, $written));
+        if ($result === false || $result === 0) {
+            throw new \RuntimeException('SMTP write failed');
+        }
+        $written += $result;
+    }
 }
 
 function netsukoSmtpExpect($socket, array $expect): string {
@@ -2234,6 +2737,10 @@ function netsukoMaybeRunAutoBackup(): void {
 
         $interval = max(1, (int) ($options->autoBackupIntervalHours ?: 24)) * 3600;
         $lastRun = (int) netsukoRuntimeOption('netsukoAutoBackupLastRun', '0');
+        $nextRetry = (int) netsukoRuntimeOption('netsukoAutoBackupNextRetry', '0');
+        if ($nextRetry > time()) {
+            return;
+        }
         if ($lastRun > 0 && time() - $lastRun < $interval) {
             return;
         }
@@ -2250,15 +2757,43 @@ function netsukoMaybeRunAutoBackup(): void {
             }
 
             $lastRun = (int) netsukoRuntimeOption('netsukoAutoBackupLastRun', '0');
+            $nextRetry = (int) netsukoRuntimeOption('netsukoAutoBackupNextRetry', '0');
+            if ($nextRetry > time()) {
+                return;
+            }
             if ($lastRun > 0 && time() - $lastRun < $interval) {
                 return;
             }
 
-            netsukoSetRuntimeOption('netsukoAutoBackupLastRun', (string) time());
-            $backup = netsukoBuildTypechoBackup();
-            netsukoSendAutoBackupMail($backup, $recipients);
-            netsukoSetRuntimeOption('netsukoAutoBackupLastStatus', 'sent ' . $backup['filename'] . ' at ' . date('Y-m-d H:i:s'));
-            netsukoBackupLog('info', 'sent ' . $backup['filename'] . ' to ' . implode(', ', $recipients));
+            $failureCount = (int) netsukoRuntimeOption('netsukoAutoBackupFailureCount', '0');
+            if ($failureCount >= 3) {
+                $failureCount = 0;
+            }
+
+            $backup = null;
+            try {
+                $backup = netsukoBuildTypechoBackup();
+                netsukoSendAutoBackupMail($backup, $recipients);
+                netsukoSetRuntimeOption('netsukoAutoBackupLastRun', (string) time());
+                netsukoSetRuntimeOption('netsukoAutoBackupFailureCount', '0');
+                netsukoSetRuntimeOption('netsukoAutoBackupNextRetry', '0');
+                netsukoSetRuntimeOption('netsukoAutoBackupLastStatus', 'sent ' . $backup['filename'] . ' at ' . date('Y-m-d H:i:s'));
+                netsukoBackupLog('info', 'sent ' . $backup['filename'] . ' to ' . implode(', ', $recipients));
+            } catch (\Throwable $e) {
+                $failureCount++;
+                $delay = $failureCount === 1 ? 60 : ($failureCount === 2 ? 300 : $interval);
+                netsukoSetRuntimeOption('netsukoAutoBackupFailureCount', (string) $failureCount);
+                netsukoSetRuntimeOption('netsukoAutoBackupNextRetry', (string) (time() + $delay));
+                netsukoSetRuntimeOption(
+                    'netsukoAutoBackupLastStatus',
+                    'failed attempt ' . $failureCount . '/3 at ' . date('Y-m-d H:i:s') . ': ' . $e->getMessage()
+                );
+                netsukoBackupLog('error', 'attempt ' . $failureCount . '/3: ' . $e->getMessage());
+            } finally {
+                if (is_array($backup) && !empty($backup['path']) && is_file($backup['path'])) {
+                    @unlink($backup['path']);
+                }
+            }
         } finally {
             flock($lock, LOCK_UN);
             fclose($lock);
@@ -2316,30 +2851,67 @@ function netsukoBuildTypechoBackup(): array {
 
     $db = \Typecho\Db::get();
     $header = str_replace('XXXX', '0001', '%TYPECHO_BACKUP_XXXX%');
-    $data = $header;
-
-    foreach ($types as $type => $typeId) {
-        $page = 1;
-        do {
-            $rows = $db->fetchAll($db->select()->from('table.' . $type)->page($page, 20));
-            $page++;
-
-            foreach ($rows as $row) {
-                $data .= netsukoBuildTypechoBackupBuffer($typeId, netsukoFilterBackupFields($row, $fields[$type]));
-            }
-        } while (count($rows) === 20);
-    }
-
-    $data .= $header;
     $options = \Typecho\Widget::widget('Widget_Options');
     $host = parse_url((string) $options->siteUrl, PHP_URL_HOST) ?: 'typecho';
     $filename = date('Ymd') . '_' . preg_replace('/[^A-Za-z0-9.-]+/', '-', $host) . '_netsuko_auto.dat';
+    $path = tempnam(sys_get_temp_dir(), 'netsuko-backup-');
+    if ($path === false) {
+        throw new \RuntimeException('Could not create temporary backup file');
+    }
+
+    $handle = fopen($path, 'wb');
+    if (!$handle) {
+        @unlink($path);
+        throw new \RuntimeException('Could not open temporary backup file');
+    }
+
+    try {
+        netsukoWriteFileData($handle, $header);
+        foreach ($types as $type => $typeId) {
+            $page = 1;
+            do {
+                $rows = $db->fetchAll($db->select()->from('table.' . $type)->page($page, 20));
+                $page++;
+
+                foreach ($rows as $row) {
+                    netsukoWriteFileData(
+                        $handle,
+                        netsukoBuildTypechoBackupBuffer($typeId, netsukoFilterBackupFields($row, $fields[$type]))
+                    );
+                }
+            } while (count($rows) === 20);
+        }
+        netsukoWriteFileData($handle, $header);
+    } catch (\Throwable $e) {
+        fclose($handle);
+        @unlink($path);
+        throw $e;
+    }
+    fclose($handle);
+
+    $size = filesize($path);
+    if ($size === false) {
+        @unlink($path);
+        throw new \RuntimeException('Could not determine backup file size');
+    }
 
     return [
         'filename' => $filename,
-        'data' => $data,
-        'size' => strlen($data)
+        'path' => $path,
+        'size' => $size
     ];
+}
+
+function netsukoWriteFileData($handle, string $data): void {
+    $length = strlen($data);
+    $written = 0;
+    while ($written < $length) {
+        $result = fwrite($handle, substr($data, $written));
+        if ($result === false || $result === 0) {
+            throw new \RuntimeException('Could not write backup data');
+        }
+        $written += $result;
+    }
 }
 
 function netsukoFilterBackupFields(array $row, array $allowed): array {
@@ -2386,7 +2958,7 @@ function netsukoSendAutoBackupMail(array $backup, array $recipients): void {
     $attachment = [
         'filename' => (string) $backup['filename'],
         'contentType' => 'application/octet-stream',
-        'data' => (string) $backup['data']
+        'path' => (string) $backup['path']
     ];
 
     foreach ($recipients as $email) {
@@ -2537,6 +3109,13 @@ function threadedComments($comments, $options) {
 
 
 function getPostThumb($obj) {
+    if ($obj->hidden) {
+        $defaultThumb = \Typecho\Widget::widget('Widget_Options')->defaultThumb;
+        return !empty($defaultThumb)
+            ? $defaultThumb
+            : Helper::options()->themeUrl . '/img/bg_watermark.jpg';
+    }
+
     // 读取文章独立设置
     $thumb = $obj->fields->thumb;
     if (!empty($thumb)) {

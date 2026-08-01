@@ -34,7 +34,7 @@ $this->need('header.php');
         <div class="md:col-span-8 lg:col-span-9 space-y-8 min-w-0">
             <article class="bg-white dark:bg-darkCard rounded-2xl border border-gray-200/50 dark:border-white/5 shadow-sm p-6 md:p-10" itemscope itemtype="http://schema.org/BlogPosting">
                 
-                <div class="post-content prose prose-teal dark:prose-invert max-w-none <?php echo $this->options->postFont == 'sans' ? 'font-sans' : 'font-serif'; ?>" data-netsuko-latex="<?php echo netsukoLatexEnabled($this) ? 'on' : 'off'; ?>">
+                <div class="post-content prose prose-teal dark:prose-invert max-w-none <?php echo netsukoOption('postFont', 'sans') == 'sans' ? 'font-sans' : 'font-serif'; ?>" data-netsuko-reading data-netsuko-latex="<?php echo netsukoLatexEnabled($this) ? 'on' : 'off'; ?>">
                     <?php echo netsukoRenderPostContent($this); ?>
                 </div>
                 

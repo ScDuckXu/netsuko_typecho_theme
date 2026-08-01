@@ -28,16 +28,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        teal: '#00d2ff',
+        teal: '#39c5bb',
         darkBg: '#121418',
         darkCard: '#1a1d24'
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        playfair: ['"Playfair Display"', 'serif']
+        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+        playfair: ['ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'serif']
       },
       boxShadow: {
-        glow: '0 0 20px rgba(0, 210, 255, 0.15)'
+        glow: '0 0 20px rgba(57, 197, 187, 0.15)'
       }
     }
   },

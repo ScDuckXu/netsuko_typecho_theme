@@ -12,7 +12,11 @@
     var fancyboxAssetsPromise = null;
     var highlightAssetsPromise = null;
     var katexAssetsPromise = null;
+    var turnstileApiPromise = null;
     var currentPjaxHref = window.location.href;
+    var drawerCloseTimer = null;
+    var scrollStateFrame = null;
+    var lateLifecycleListeners = [];
     var postLightboxSelector = '.post-content a.netsuko-image-lightbox[data-fancybox]';
 
     function $(selector, root) {
@@ -22,6 +26,10 @@
     function $all(selector, root) {
         return Array.prototype.slice.call((root || document).querySelectorAll(selector));
     }
+
+    $all('script[src]').forEach(function (script) {
+        loadedExternalScripts[script.src] = true;
+    });
 
     function samePageUrl(left, right) {
         return left.origin === right.origin &&
@@ -87,7 +95,7 @@
             return false;
         }
 
-        if (samePageUrl(url, new URL(window.location.href)) && url.hash) {
+        if (samePageUrl(url, new URL(window.location.href))) {
             return false;
         }
 
@@ -134,14 +142,22 @@
 
     function updateReadingProgress() {
         var bar = $('#netsuko-reading-progress span');
-        if (!bar) {
+        var content = $('[data-netsuko-reading]');
+        if (!bar || !content) {
+            document.documentElement.classList.remove('netsuko-reading-active');
+            if (bar) {
+                bar.style.transform = 'scaleX(0)';
+            }
             return;
         }
 
-        var doc = document.documentElement;
-        var max = Math.max(0, doc.scrollHeight - window.innerHeight);
-        var progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-        var isActive = max > 160;
+        var rect = content.getBoundingClientRect();
+        var top = rect.top + window.scrollY;
+        var start = Math.max(0, top - 64);
+        var end = top + content.offsetHeight - window.innerHeight;
+        var distance = Math.max(0, end - start);
+        var progress = distance > 0 ? Math.min(1, Math.max(0, (window.scrollY - start) / distance)) : 0;
+        var isActive = distance > 160;
 
         document.documentElement.classList.toggle('netsuko-reading-active', isActive);
         bar.style.transform = 'scaleX(' + progress.toFixed(4) + ')';
@@ -230,7 +246,10 @@
         }
 
         document.documentElement.dataset.netsukoMotionEventsReady = 'true';
-        window.addEventListener('scroll', scheduleReadingProgress, { passive: true });
+        window.addEventListener('scroll', function () {
+            scheduleReadingProgress();
+            scheduleScrollStateSave();
+        }, { passive: true });
         window.addEventListener('resize', scheduleReadingProgress);
     }
 
@@ -650,8 +669,10 @@
         overlay.classList.add('opacity-0');
         panel.classList.add('translate-x-full');
         document.body.style.overflow = '';
-        window.setTimeout(function () {
+        window.clearTimeout(drawerCloseTimer);
+        drawerCloseTimer = window.setTimeout(function () {
             drawer.classList.add('hidden');
+            drawerCloseTimer = null;
         }, 300);
     }
 
@@ -674,6 +695,8 @@
         overlay.dataset.netsukoDrawerReady = 'true';
 
         openBtn.addEventListener('click', function () {
+            window.clearTimeout(drawerCloseTimer);
+            drawerCloseTimer = null;
             drawer.classList.remove('hidden');
             void drawer.offsetWidth;
             overlay.classList.remove('opacity-0');
@@ -708,23 +731,102 @@
         update();
     };
 
-    theme.initTurnstile = function (root) {
+    function removeTurnstileWidget(node) {
+        var widgetId = node.dataset.netsukoTurnstileWidgetId || '';
+
+        if (widgetId && window.turnstile && typeof window.turnstile.remove === 'function') {
+            try {
+                window.turnstile.remove(widgetId);
+            } catch (error) {
+                // Clear the host even when Turnstile has already discarded the widget.
+            }
+        }
+
+        node.removeAttribute('data-netsuko-turnstile-widget-id');
+        node.removeAttribute('data-netsuko-turnstile-ready');
+        node.innerHTML = '';
+        return true;
+    }
+
+    function renderTurnstile(root) {
         if (!window.turnstile || typeof window.turnstile.render !== 'function') {
             return;
         }
 
         $all('.cf-turnstile', root || document).forEach(function (node) {
-            if (node.dataset.netsukoTurnstileReady === 'true') {
+            if (node.dataset.netsukoTurnstileWidgetId) {
                 return;
             }
 
             try {
-                window.turnstile.render(node);
+                var widgetId = window.turnstile.render(node, {
+                    sitekey: node.dataset.sitekey,
+                    theme: node.dataset.theme || 'auto'
+                });
+                node.dataset.netsukoTurnstileWidgetId = widgetId;
                 node.dataset.netsukoTurnstileReady = 'true';
             } catch (error) {
-                // Turnstile may already be rendered by its own async loader.
+                node.removeAttribute('data-netsuko-turnstile-widget-id');
+                node.removeAttribute('data-netsuko-turnstile-ready');
             }
         });
+    }
+
+    function ensureTurnstileApi(root) {
+        if (window.turnstile && typeof window.turnstile.render === 'function') {
+            renderTurnstile(root);
+            return;
+        }
+
+        if (!turnstileApiPromise) {
+            window.netsukoTurnstileLoaded = function () {
+                renderTurnstile(document);
+            };
+            turnstileApiPromise = ensureScript(
+                'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=netsukoTurnstileLoaded&render=explicit',
+                function () {
+                    return !!window.turnstile;
+                }
+            );
+        }
+
+        turnstileApiPromise.then(function () {
+            renderTurnstile(root);
+        });
+    }
+
+    function wrapCommentReplyForTurnstile(methodName) {
+        if (!window.TypechoComment || typeof window.TypechoComment[methodName] !== 'function') {
+            return;
+        }
+
+        var original = window.TypechoComment[methodName];
+        if (original.netsukoTurnstileWrapped === true) {
+            return;
+        }
+
+        var wrapped = function () {
+            $all('.cf-turnstile').forEach(removeTurnstileWidget);
+            var result = original.apply(this, arguments);
+            window.setTimeout(function () {
+                theme.initTurnstile(document);
+            }, 0);
+            return result;
+        };
+        wrapped.netsukoTurnstileWrapped = true;
+        window.TypechoComment[methodName] = wrapped;
+    }
+
+    theme.initTurnstile = function (root) {
+        wrapCommentReplyForTurnstile('reply');
+        wrapCommentReplyForTurnstile('cancelReply');
+
+        var scope = root || document;
+        if (!$('.cf-turnstile', scope)) {
+            return;
+        }
+
+        ensureTurnstileApi(scope);
     };
 
     function runLifecycle(root, currentHref) {
@@ -738,6 +840,9 @@
         }
         if (typeof theme.initDevices === 'function') {
             theme.initDevices();
+        }
+        if (typeof theme.initBangumi === 'function') {
+            theme.initBangumi(root);
         }
         theme.initLazyLoad(root);
         theme.initCodeHighlight(root);
@@ -771,15 +876,58 @@
         });
     }
 
-    function executeHeadScripts(newDocument) {
+    function executeHeadScripts(newDocument, isCurrentNavigation) {
         var chain = Promise.resolve();
         $all('script', newDocument.head).forEach(function (script) {
             chain = chain.then(function () {
+                if (!isCurrentNavigation()) {
+                    throw new DOMException('Navigation aborted', 'AbortError');
+                }
                 return executeScript(script);
             });
         });
 
         return chain;
+    }
+
+    function clearLateLifecycleListeners() {
+        lateLifecycleListeners.forEach(function (item) {
+            item.target.removeEventListener(item.type, item.listener, item.options);
+        });
+        lateLifecycleListeners = [];
+    }
+
+    function invokeLateDomReadyListener(listener) {
+        var originalWindowAdd = window.addEventListener;
+        var originalDocumentAdd = document.addEventListener;
+        var track = function (target, originalAdd, type, callback, options) {
+            originalAdd.call(target, type, callback, options);
+            lateLifecycleListeners.push({
+                target: target,
+                type: type,
+                listener: callback,
+                options: options
+            });
+        };
+
+        window.addEventListener = function (type, callback, options) {
+            track(window, originalWindowAdd, type, callback, options);
+        };
+        document.addEventListener = function (type, callback, options) {
+            track(document, originalDocumentAdd, type, callback, options);
+        };
+
+        try {
+            var event = new Event('DOMContentLoaded');
+            if (typeof listener === 'function') {
+                listener.call(document, event);
+            } else if (listener && typeof listener.handleEvent === 'function') {
+                listener.handleEvent(event);
+            }
+        } finally {
+            window.addEventListener = originalWindowAdd;
+            document.addEventListener = originalDocumentAdd;
+        }
     }
 
     function executeScript(script) {
@@ -805,17 +953,33 @@
                 return;
             }
 
-            fresh.text = script.textContent;
-            document.body.appendChild(fresh);
-            document.body.removeChild(fresh);
+            var originalDocumentAdd = document.addEventListener;
+            document.addEventListener = function (type, listener, options) {
+                if (type === 'DOMContentLoaded') {
+                    invokeLateDomReadyListener(listener);
+                    return;
+                }
+                originalDocumentAdd.call(document, type, listener, options);
+            };
+
+            try {
+                fresh.text = script.textContent;
+                document.body.appendChild(fresh);
+                document.body.removeChild(fresh);
+            } finally {
+                document.addEventListener = originalDocumentAdd;
+            }
             resolve();
         });
     }
 
-    function executeContainerScripts(container) {
+    function executeContainerScripts(container, isCurrentNavigation) {
         var chain = Promise.resolve();
         $all('script', container).forEach(function (script) {
             chain = chain.then(function () {
+                if (!isCurrentNavigation()) {
+                    throw new DOMException('Navigation aborted', 'AbortError');
+                }
                 return executeScript(script);
             });
         });
@@ -840,26 +1004,68 @@
         });
     }
 
-    function updateDocument(newDocument, currentHref) {
+    function updateDocument(newDocument, currentHref, isCurrentNavigation) {
         var oldContainer = $(containerSelector);
         var newContainer = $(containerSelector, newDocument);
         if (!oldContainer || !newContainer) {
             return Promise.reject(new Error('PJAX container is missing'));
         }
+        if (!isCurrentNavigation()) {
+            return Promise.reject(new DOMException('Navigation aborted', 'AbortError'));
+        }
 
         document.title = newDocument.title;
         copyHeadAssets(newDocument);
+        clearLateLifecycleListeners();
         oldContainer.innerHTML = newContainer.innerHTML;
 
-        return executeHeadScripts(newDocument).then(function () {
-            return executeContainerScripts(oldContainer);
+        return executeHeadScripts(newDocument, isCurrentNavigation).then(function () {
+            if (!isCurrentNavigation()) {
+                throw new DOMException('Navigation aborted', 'AbortError');
+            }
+            return executeContainerScripts(oldContainer, isCurrentNavigation);
         }).then(function () {
-            document.dispatchEvent(new Event('DOMContentLoaded', { bubbles: true, cancelable: true }));
+            if (!isCurrentNavigation()) {
+                throw new DOMException('Navigation aborted', 'AbortError');
+            }
             runLifecycle(oldContainer, currentHref);
         });
     }
 
-    function scrollAfterNavigation(url) {
+    function saveCurrentScrollPosition() {
+        if (!config.enabled || !window.history.replaceState) {
+            return;
+        }
+
+        var state = Object.assign({}, window.history.state || {}, {
+            netsukoPjax: true,
+            scrollX: window.scrollX,
+            scrollY: window.scrollY
+        });
+        window.history.replaceState(state, '', window.location.href);
+    }
+
+    function scheduleScrollStateSave() {
+        if (scrollStateFrame) {
+            return;
+        }
+
+        scrollStateFrame = window.requestAnimationFrame(function () {
+            scrollStateFrame = null;
+            saveCurrentScrollPosition();
+        });
+    }
+
+    function scrollAfterNavigation(url, position) {
+        if (position && Number.isFinite(position.scrollY)) {
+            window.scrollTo({
+                left: Number.isFinite(position.scrollX) ? position.scrollX : 0,
+                top: position.scrollY,
+                behavior: 'auto'
+            });
+            return;
+        }
+
         if (url.hash) {
             var target = document.getElementById(decodeURIComponent(url.hash.slice(1)));
             if (target) {
@@ -873,8 +1079,12 @@
 
     function navigate(href, options) {
         var url = new URL(href, window.location.href);
+        var request;
         options = options || {};
 
+        if (!options.fromPopState) {
+            saveCurrentScrollPosition();
+        }
         closeDrawer();
         setLoading(true);
         document.dispatchEvent(new CustomEvent('netsuko:pjax:start', { detail: { url: url.href } }));
@@ -883,10 +1093,11 @@
             activeRequest.abort();
         }
 
-        activeRequest = new AbortController();
+        request = new AbortController();
+        activeRequest = request;
         return fetch(url.href, {
             credentials: 'same-origin',
-            signal: activeRequest.signal,
+            signal: request.signal,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-Netsuko-PJAX': 'true'
@@ -897,15 +1108,23 @@
             }
             return response.text();
         }).then(function (html) {
+            if (request.signal.aborted || activeRequest !== request) {
+                throw new DOMException('Navigation aborted', 'AbortError');
+            }
             var newDocument = new DOMParser().parseFromString(html, 'text/html');
-            return updateDocument(newDocument, url.href);
+            return updateDocument(newDocument, url.href, function () {
+                return !request.signal.aborted && activeRequest === request;
+            });
         }).then(function () {
+            if (request.signal.aborted || activeRequest !== request) {
+                throw new DOMException('Navigation aborted', 'AbortError');
+            }
             if (!options.fromPopState) {
-                window.history.pushState({ netsukoPjax: true }, '', url.href);
+                window.history.pushState({ netsukoPjax: true, scrollX: 0, scrollY: 0 }, '', url.href);
             }
             currentPjaxHref = url.href;
             updateActiveNavigation(url.href);
-            scrollAfterNavigation(url);
+            scrollAfterNavigation(url, options.scrollPosition);
             document.dispatchEvent(new CustomEvent('netsuko:pjax:complete', { detail: { url: url.href } }));
         }).catch(function (error) {
             if (error.name === 'AbortError') {
@@ -913,8 +1132,10 @@
             }
             window.location.href = url.href;
         }).finally(function () {
-            setLoading(false);
-            activeRequest = null;
+            if (activeRequest === request) {
+                setLoading(false);
+                activeRequest = null;
+            }
         });
     }
 
@@ -924,7 +1145,14 @@
         }
 
         document.documentElement.dataset.netsukoPjaxReady = 'true';
-        window.history.replaceState({ netsukoPjax: true }, '', window.location.href);
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual';
+        }
+        window.history.replaceState({
+            netsukoPjax: true,
+            scrollX: window.scrollX,
+            scrollY: window.scrollY
+        }, '', window.location.href);
 
         document.addEventListener('click', function (event) {
             var link = event.target.closest('a');
@@ -937,17 +1165,25 @@
             navigate(link.href);
         });
 
-        window.addEventListener('popstate', function () {
+        window.addEventListener('popstate', function (event) {
             var nextUrl = new URL(window.location.href, window.location.href);
             var previousUrl = new URL(currentPjaxHref, window.location.href);
 
             if (samePageUrl(nextUrl, previousUrl)) {
                 currentPjaxHref = nextUrl.href;
                 updateActiveNavigation(nextUrl.href);
+                if (nextUrl.hash) {
+                    scrollAfterNavigation(nextUrl, null);
+                } else if (event.state && event.state.netsukoPjax) {
+                    scrollAfterNavigation(nextUrl, event.state);
+                }
                 return;
             }
 
-            navigate(window.location.href, { fromPopState: true });
+            navigate(window.location.href, {
+                fromPopState: true,
+                scrollPosition: event.state && event.state.netsukoPjax ? event.state : null
+            });
         });
 
     }
