@@ -3,7 +3,7 @@
  * 悦己绮世，自由如风。https://github.com/ScDuckXu/netsuko_typecho_theme
  * @package Netsuko
  * @author Nazuki_Etsuko
- * @version 1.2.3.1
+ * @version 1.2.3
  * @link https://duckxu.com
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
