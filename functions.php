@@ -1218,11 +1218,16 @@ function netsukoBangumiPageData($archive): array {
 }
 
 function netsukoReadBangumiCache(string $path, string $username): ?array {
-    if (!is_file($path) || !is_readable($path)) {
+    if (!@is_file($path) || !@is_readable($path)) {
         return null;
     }
 
-    $decoded = json_decode((string) file_get_contents($path), true);
+    $contents = @file_get_contents($path);
+    if (!is_string($contents)) {
+        return null;
+    }
+
+    $decoded = json_decode($contents, true);
     if (!is_array($decoded) || (string) ($decoded['username'] ?? '') !== $username || !isset($decoded['groups']) || !is_array($decoded['groups'])) {
         return null;
     }
@@ -1230,11 +1235,13 @@ function netsukoReadBangumiCache(string $path, string $username): ?array {
     return $decoded;
 }
 
-function netsukoWriteBangumiCache(string $path, array $payload): void {
+function netsukoWriteBangumiCache(string $path, array $payload): bool {
     $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($encoded === false || file_put_contents($path, $encoded, LOCK_EX) === false) {
-        throw new \RuntimeException('无法写入 Bangumi 缓存');
+    if ($encoded === false) {
+        return false;
     }
+
+    return @file_put_contents($path, $encoded, LOCK_EX) !== false;
 }
 
 function netsukoFetchBangumiPayload(string $username, int $limit): array {
