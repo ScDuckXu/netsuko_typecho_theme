@@ -44,7 +44,7 @@
 </head>
 
 
-<body class="min-h-screen flex flex-col pt-16">
+<body class="min-h-screen flex flex-col pt-16<?php echo netsukoSimpleMode() ? ' netsuko-simple-mode' : ''; ?>">
 
 
     <header id="header" class="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-darkBg/70 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 transition-colors duration-500">

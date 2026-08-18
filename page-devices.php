@@ -75,11 +75,11 @@ $fancyboxAssets = netsukoFancyboxAssets();
                             <article class="device-card" style="--device-accent: <?php echo $accent; ?>;">
                                 <a class="device-media" href="<?php echo netsukoUrl($image); ?>" data-fancybox="devices" data-caption="<?php echo netsukoEscape($name); ?>">
                                     <img src="<?php echo netsukoUrl($image); ?>" alt="<?php echo netsukoEscape($name); ?>" loading="lazy">
-                                    <span><?php echo netsukoEscape($status); ?></span>
+                                    <span class="device-status"><?php echo netsukoEscape($status); ?></span>
                                 </a>
 
                                 <div class="device-body">
-                                    <div class="device-title-row">
+                                    <header class="device-title-row">
                                         <div>
                                             <?php if ($role): ?><p><?php echo netsukoEscape($role); ?></p><?php endif; ?>
                                             <h3>
@@ -90,10 +90,10 @@ $fancyboxAssets = netsukoFancyboxAssets();
                                                 <?php endif; ?>
                                             </h3>
                                         </div>
-                                    </div>
+                                    </header>
 
                                     <?php if ($brand || $model || $since || $price): ?>
-                                        <dl class="device-meta">
+                                        <dl class="device-meta" aria-label="设备信息">
                                             <?php if ($brand): ?><div><dt>品牌</dt><dd><?php echo netsukoEscape($brand); ?></dd></div><?php endif; ?>
                                             <?php if ($model): ?><div><dt>型号</dt><dd><?php echo netsukoEscape($model); ?></dd></div><?php endif; ?>
                                             <?php if ($since): ?><div><dt>入手</dt><dd><?php echo netsukoEscape($since); ?></dd></div><?php endif; ?>
@@ -101,25 +101,35 @@ $fancyboxAssets = netsukoFancyboxAssets();
                                         </dl>
                                     <?php endif; ?>
 
-                                    <?php if (!empty($specs)): ?>
-                                        <dl class="device-specs">
-                                            <?php foreach ($specs as $spec): ?>
-                                                <div>
-                                                    <dt><?php echo netsukoEscape($spec['label']); ?></dt>
-                                                    <dd><?php echo netsukoEscape($spec['value']); ?></dd>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </dl>
-                                    <?php endif; ?>
+                                    <?php if (!empty($specs) || $note || !empty($tags)): ?>
+                                        <details class="device-details">
+                                            <summary>
+                                                <span>详细信息</span>
+                                                <span class="device-details-count"><?php echo count($specs); ?> 项规格</span>
+                                            </summary>
+                                            <div class="device-details-content">
+                                                <?php if (!empty($specs)): ?>
+                                                    <dl class="device-specs" aria-label="详细规格">
+                                                        <?php foreach ($specs as $spec): ?>
+                                                            <div>
+                                                                <dt><?php echo netsukoEscape($spec['label']); ?></dt>
+                                                                <dd><?php echo netsukoEscape($spec['value']); ?></dd>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </dl>
+                                                <?php endif; ?>
 
-                                    <?php if ($note): ?>
-                                        <p class="device-note"><?php echo netsukoEscape($note); ?></p>
-                                    <?php endif; ?>
+                                                <?php if ($note): ?>
+                                                    <p class="device-note"><?php echo netsukoEscape($note); ?></p>
+                                                <?php endif; ?>
 
-                                    <?php if (!empty($tags)): ?>
-                                        <div class="device-tags">
-                                            <?php foreach ($tags as $tag): ?><span><?php echo netsukoEscape($tag); ?></span><?php endforeach; ?>
-                                        </div>
+                                                <?php if (!empty($tags)): ?>
+                                                    <div class="device-tags" aria-label="设备标签">
+                                                        <?php foreach ($tags as $tag): ?><span><?php echo netsukoEscape($tag); ?></span><?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </details>
                                     <?php endif; ?>
                                 </div>
                             </article>

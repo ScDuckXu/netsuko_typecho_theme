@@ -53,6 +53,20 @@ function themeConfig($form)
     );
     $form->addInput($colorScheme);
 
+    netsukoConfigSection($form, '运行模式', '用一个总模式控制主要增强功能；完整模式继续沿用现有细项设置。');
+
+    $featureMode = new \Typecho\Widget\Helper\Form\Element\Select(
+        'featureMode',
+        array(
+            'full' => _t('完整模式（默认）'),
+            'simple' => _t('简洁模式')
+        ),
+        'full',
+        _t('主题功能模式'),
+        _t('完整模式保持当前行为。简洁模式暂停 PJAX、LazyLoad、代码高亮、LaTeX、Bangumi 动态请求和侧栏资料模块，适合排障或只保留基础阅读体验。')
+    );
+    $form->addInput($featureMode);
+
     netsukoConfigSection($form, '静态资源', '选择 Tailwind CSS 与 Fancybox 的加载来源。默认使用主题内置本地资源。');
 
     $assetSourceOptions = array(
@@ -568,6 +582,8 @@ function themeConfig($form)
         _t('支持 HTML；变量会自动转义并替换。')
     );
     $form->addInput($commentMailVisitorTemplate);
+
+    netsukoConfigAdminEnhancements($form);
 }
 
 function netsukoConfigAdminAssets($form): void {
@@ -581,6 +597,105 @@ function netsukoConfigAdminAssets($form): void {
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #f8fafc;
+}
+
+form.netsuko-config-form {
+    position: relative;
+    padding-left: 214px;
+}
+
+.netsuko-config-nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 188px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.netsuko-config-nav strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #111827;
+    font-size: 13px;
+}
+
+.netsuko-config-nav a {
+    display: block;
+    padding: 7px 8px;
+    border-left: 2px solid transparent;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.45;
+    text-decoration: none;
+}
+
+.netsuko-config-nav a:hover,
+.netsuko-config-nav a.is-active {
+    border-left-color: #0f766e;
+    background: #f0fdfa;
+    color: #0f766e;
+}
+
+.netsuko-config-submit {
+    position: sticky;
+    bottom: 12px;
+    z-index: 5;
+    margin-top: 16px !important;
+    padding: 12px 14px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 760px) {
+    form.netsuko-config-form {
+        padding-left: 0;
+    }
+
+    .netsuko-config-nav {
+        position: sticky;
+        top: 8px;
+        width: auto;
+        margin: 0 0 16px;
+        padding: 8px;
+    }
+
+    .netsuko-config-nav strong {
+        margin: 0 0 5px;
+    }
+
+    .netsuko-config-nav nav {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .netsuko-config-nav a {
+        flex: 0 0 auto;
+        border-left: 0;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+    }
+
+    .netsuko-config-nav a:hover,
+    .netsuko-config-nav a.is-active {
+        border-left-color: transparent;
+        border-bottom-color: #0f766e;
+    }
+
+    .netsuko-config-submit {
+        bottom: 0;
+        margin-left: -8px !important;
+        margin-right: -8px !important;
+        border-radius: 8px 8px 0 0;
+    }
 }
 .netsuko-config-section h3,
 .netsuko-version-card h3,
@@ -661,12 +776,88 @@ CSS);
 }
 
 function netsukoConfigSection($form, string $title, string $description): void {
-    $section = new \Typecho\Widget\Helper\Layout('div', ['class' => 'netsuko-config-section']);
+    static $sectionIndex = 0;
+    $sectionIndex++;
+    $section = new \Typecho\Widget\Helper\Layout('div', [
+        'class' => 'netsuko-config-section',
+        'id' => 'netsuko-config-section-' . $sectionIndex,
+        'data-nav-label' => $title
+    ]);
     $section->html(
         '<h3>' . netsukoEscape($title) . '</h3>' .
         '<p>' . netsukoEscape($description) . '</p>'
     );
     $form->addItem($section);
+}
+
+function netsukoConfigAdminEnhancements($form): void {
+    $script = new \Typecho\Widget\Helper\Layout('script');
+    $script->html(<<<'JS'
+(function () {
+    function init() {
+        var form = document.querySelector('form.netsuko-config-form') || document.querySelector('form');
+        if (!form || form.dataset.netsukoConfigReady === 'true') {
+            return;
+        }
+
+        var sections = Array.prototype.slice.call(form.querySelectorAll('.netsuko-config-section'));
+        if (!sections.length) {
+            return;
+        }
+
+        form.dataset.netsukoConfigReady = 'true';
+        form.classList.add('netsuko-config-form');
+
+        var nav = document.createElement('aside');
+        nav.className = 'netsuko-config-nav';
+        nav.setAttribute('aria-label', '设置分组导航');
+        nav.innerHTML = '<strong>设置导航</strong><nav></nav>';
+        var navList = nav.querySelector('nav');
+
+        sections.forEach(function (section, index) {
+            var id = section.id || ('netsuko-config-section-' + (index + 1));
+            section.id = id;
+            var link = document.createElement('a');
+            link.href = '#' + id;
+            link.textContent = section.getAttribute('data-nav-label') || ('分组 ' + (index + 1));
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', '#' + id);
+            });
+            navList.appendChild(link);
+        });
+
+        form.insertBefore(nav, form.firstChild);
+        var submit = form.querySelector('.typecho-option-submit');
+        if (submit) {
+            submit.classList.add('netsuko-config-submit');
+        }
+
+        var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+                    links.forEach(function (link) {
+                        link.classList.toggle('is-active', link.getAttribute('href') === '#' + entry.target.id);
+                    });
+                });
+            }, { rootMargin: '-18% 0px -68% 0px', threshold: 0 });
+            sections.forEach(function (section) { observer.observe(section); });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        window.setTimeout(init, 0);
+    }
+})();
+JS);
+    $form->addItem($script);
 }
 
 function netsukoThemeVersion(): string {
@@ -705,6 +896,7 @@ function netsukoConfigBackupTools($form): void {
         'postFont',
         'defaultThumb',
         'colorScheme',
+        'featureMode',
         'tailwindAssetSource',
         'tailwindCustomUrl',
         'fancyboxAssetSource',
@@ -1060,13 +1252,51 @@ function netsukoConfigVersionChecker($form): void {
 
 
 function themeFields($layout) {
+    $advancedClass = 'typecho-option netsuko-theme-field-advanced-item';
+    $advancedScript = <<<'HTML'
+<script>
+(function () {
+    function init() {
+        var names = ['thumb', 'custom_excerpt', 'stickyPost', 'subtitle', 'enableLatex'];
+        var items = names.map(function (name) {
+            var input = document.querySelector('[name="fields[' + name + ']"]');
+            return input ? input.closest('li.field') : null;
+        }).filter(function (item) { return item; });
+        if (!items.length || document.querySelector('details.netsuko-theme-fields-advanced')) {
+            return;
+        }
+
+        var details = document.createElement('details');
+        details.className = 'netsuko-theme-fields-advanced';
+        var summary = document.createElement('summary');
+        summary.className = 'netsuko-theme-fields-summary';
+        summary.innerHTML = '<strong>高级选项</strong><span>头图、摘要、置顶、副标题和 LaTeX</span>';
+        details.appendChild(summary);
+        items[0].parentNode.insertBefore(details, items[0]);
+        items.forEach(function (item) { details.appendChild(item); });
+
+        var style = document.createElement('style');
+        style.textContent = '.netsuko-theme-fields-advanced{margin:12px 0;border:1px solid #e5e7eb;border-radius:8px;background:#fff}.netsuko-theme-fields-summary{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;cursor:pointer}.netsuko-theme-fields-summary span{color:#6b7280;font-size:12px}.netsuko-theme-fields-advanced[open]{padding-bottom:8px}.netsuko-theme-fields-advanced[open] .netsuko-theme-fields-summary{border-bottom:1px solid #e5e7eb;margin-bottom:8px}';
+        document.head.appendChild(style);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        window.setTimeout(init, 0);
+    }
+})();
+</script>
+HTML;
+
     $thumb = new \Typecho\Widget\Helper\Form\Element\Text(
         'thumb', 
         NULL, 
         NULL, 
         _t('自定义头图/缩略图 (可选)'), 
-        _t('填入图片 URL。留空时系统将尝试抓取文章内的第一张图片作为封面图。无图片时，使用后台设置的默认展示图。')
+        _t('填入图片 URL。留空时系统将尝试抓取文章内的第一张图片作为封面图。无图片时，使用后台设置的默认展示图。') . $advancedScript
     );
+    $thumb->class = $advancedClass;
     $layout->addItem($thumb);
 
     $custom_excerpt = new \Typecho\Widget\Helper\Form\Element\Textarea(
@@ -1076,6 +1306,7 @@ function themeFields($layout) {
         _t('自定义摘要'), 
         _t('输入这篇文章的精简摘要。留空时首页将自动截取文章正文的前 30 个字。')
     );
+    $custom_excerpt->class = $advancedClass;
     $layout->addItem($custom_excerpt);
 
     $stickyPost = new \Typecho\Widget\Helper\Form\Element\Radio(
@@ -1085,6 +1316,7 @@ function themeFields($layout) {
         _t('首页置顶'),
         _t('开启后会在首页第一页顶部显示红标【置顶】，多篇置顶文章按发布时间从新到旧排序。')
     );
+    $stickyPost->class = $advancedClass;
     $layout->addItem($stickyPost);
 
     $subtitle = new \Typecho\Widget\Helper\Form\Element\Text(
@@ -1094,6 +1326,7 @@ function themeFields($layout) {
         _t('页面副标题'), 
         _t('显示在页面大标题下方的说明文字。留空则在部分模板下显示默认文案。')
     );
+    $subtitle->class = $advancedClass;
     $layout->addItem($subtitle);
 
     $enableLatex = new \Typecho\Widget\Helper\Form\Element\Radio(
@@ -1107,6 +1340,7 @@ function themeFields($layout) {
         _t('LaTeX 解析'),
         _t('仅影响当前文章或独立页。启用后支持 $...$、$$...$$、\\(...\\) 与 \\[...\\]。')
     );
+    $enableLatex->class = $advancedClass;
     $layout->addItem($enableLatex);
 }
 
@@ -1167,6 +1401,17 @@ function netsukoBangumiStates(): array {
 }
 
 function netsukoBangumiPageData($archive): array {
+    if (netsukoSimpleMode()) {
+        return [
+            'username' => '',
+            'profile' => [],
+            'groups' => [],
+            'fetchedAt' => 0,
+            'stale' => false,
+            'error' => '简洁模式已暂停 Bangumi 动态数据'
+        ];
+    }
+
     $configured = trim((string) netsukoOption('bangumiProfile', ''));
     $source = $configured !== '' ? $configured : (string) ($archive->text ?? '');
     $username = netsukoBangumiUsername($source);
@@ -1799,7 +2044,20 @@ function netsukoFancyboxAssets(): array {
     }
 }
 
+function netsukoFeatureMode(): string {
+    $mode = (string) netsukoOption('featureMode', 'full');
+    return $mode === 'simple' ? 'simple' : 'full';
+}
+
+function netsukoSimpleMode(): bool {
+    return netsukoFeatureMode() === 'simple';
+}
+
 function netsukoPjaxEnabled(): bool {
+    if (netsukoSimpleMode()) {
+        return false;
+    }
+
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->pjaxEnabled ?: 'on') === 'on';
 }
@@ -1821,11 +2079,19 @@ function netsukoPjaxScriptUrl(): string {
 }
 
 function netsukoLazyLoadEnabled(): bool {
+    if (netsukoSimpleMode()) {
+        return false;
+    }
+
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->lazyLoadEnabled ?: 'on') === 'on';
 }
 
 function netsukoCodeHighlightEnabled(): bool {
+    if (netsukoSimpleMode()) {
+        return false;
+    }
+
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->codeHighlightEnabled ?: 'on') === 'on';
 }
@@ -1846,6 +2112,10 @@ function netsukoContentAssets(): array {
 }
 
 function netsukoLatexEnabled($archive): bool {
+    if (netsukoSimpleMode()) {
+        return false;
+    }
+
     $options = \Typecho\Widget::widget('Widget_Options');
     $field = 'default';
 

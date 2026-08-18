@@ -65,7 +65,8 @@
             return false;
         }
 
-        if (event.target.closest('.fancybox__container, [data-fancybox-close], [data-fancybox-button], [data-panzoom-action], .f-button')) {
+        var eventTarget = event.target;
+        if (eventTarget && eventTarget.closest && eventTarget.closest('.fancybox__container, [data-fancybox-close], [data-fancybox-button], [data-panzoom-action], .f-button')) {
             return false;
         }
 
@@ -77,7 +78,7 @@
             return false;
         }
 
-        if (link.hasAttribute('download') || link.closest('[data-no-pjax]')) {
+        if (link.hasAttribute('download') || link.closest('[data-no-pjax], [data-fancybox], .netsuko-image-lightbox')) {
             return false;
         }
 
@@ -106,6 +107,10 @@
         ensureProgressIndicators();
         window.clearTimeout(transitionTimer);
 
+        if (isLoading && document.documentElement.classList.contains('with-fancybox')) {
+            return;
+        }
+
         document.documentElement.classList.toggle('netsuko-pjax-loading', isLoading);
         document.body.classList.toggle('netsuko-pjax-loading', isLoading);
 
@@ -120,6 +125,39 @@
         transitionTimer = window.setTimeout(function () {
             document.documentElement.classList.remove('netsuko-pjax-complete');
         }, 520);
+    }
+
+    function resetProgressIndicators() {
+        var pjaxProgress = $('#netsuko-pjax-progress');
+        var readingProgress = $('#netsuko-reading-progress');
+
+        if (pjaxProgress) {
+            pjaxProgress.style.removeProperty('opacity');
+            pjaxProgress.style.removeProperty('transform');
+        }
+
+        if (readingProgress) {
+            var readingBar = $('span', readingProgress);
+            if (readingBar) {
+                readingBar.style.removeProperty('transform');
+            }
+        }
+
+        document.documentElement.classList.remove('netsuko-pjax-loading', 'netsuko-pjax-complete');
+        document.body.classList.remove('netsuko-pjax-loading');
+        document.documentElement.dataset.netsukoPjaxState = 'ready';
+    }
+
+    function setFancyboxOpen(isOpen) {
+        document.documentElement.classList.toggle('netsuko-fancybox-open', isOpen);
+        document.body.classList.toggle('netsuko-fancybox-open', isOpen);
+
+        if (isOpen) {
+            window.clearTimeout(transitionTimer);
+            resetProgressIndicators();
+        } else {
+            scheduleReadingProgress();
+        }
     }
 
     function ensureProgressIndicators() {
@@ -475,6 +513,14 @@
             window.Fancybox.bind(postLightboxSelector, {
                 contentClick: 'toggleZoom',
                 backdropClick: 'close',
+                on: {
+                    init: function () {
+                        setFancyboxOpen(true);
+                    },
+                    destroy: function () {
+                        setFancyboxOpen(false);
+                    }
+                },
                 Toolbar: {
                     display: {
                         left: ['infobar'],

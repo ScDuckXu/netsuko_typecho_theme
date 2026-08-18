@@ -699,7 +699,7 @@ html.netsuko-page-enter #netsuko-pjax-container > * {
 #netsuko-reading-progress {
     position: fixed;
     left: 0;
-    z-index: 9999;
+    z-index: 100;
     width: 100%;
     pointer-events: none;
 }
@@ -746,6 +746,14 @@ html.netsuko-pjax-complete #netsuko-pjax-progress {
 
 html.netsuko-reading-active #netsuko-reading-progress {
     opacity: 1;
+}
+
+html.with-fancybox #netsuko-pjax-progress,
+html.with-fancybox #netsuko-reading-progress,
+html.netsuko-fancybox-open #netsuko-pjax-progress,
+html.netsuko-fancybox-open #netsuko-reading-progress {
+    opacity: 0 !important;
+    visibility: hidden;
 }
 
 @keyframes netsukoPageEnter {
@@ -1364,8 +1372,8 @@ html.dark .devices-section-header p {
 
 .devices-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
     align-items: start;
 }
 
@@ -1395,7 +1403,7 @@ html.dark .device-card {
 .device-media {
     position: relative;
     display: block;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
     background: rgba(15, 23, 42, 0.06);
     cursor: zoom-in;
@@ -1432,14 +1440,19 @@ html.dark .device-card {
 .device-body {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
+    gap: 14px;
+    padding: 20px;
 }
 
 .device-title-row {
     display: flex;
     justify-content: space-between;
     gap: 14px;
+    min-width: 0;
+}
+
+.device-title-row > div {
+    min-width: 0;
 }
 
 .device-title-row p {
@@ -1456,6 +1469,8 @@ html.dark .device-card {
     font-size: 18px;
     font-weight: 750;
     line-height: 1.28;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .device-title-row h3 a {
@@ -1511,6 +1526,7 @@ html.dark .device-specs div {
     font-size: 12px;
     font-weight: 650;
     overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 html.dark .device-meta dd,
@@ -1523,6 +1539,8 @@ html.dark .device-specs dd {
     color: #6b7280;
     font-size: 13px;
     line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 html.dark .device-note {
@@ -1534,6 +1552,77 @@ html.dark .device-note {
     flex-wrap: wrap;
     gap: 6px;
     padding-top: 2px;
+}
+
+.device-details {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    padding-top: 12px;
+}
+
+html.dark .device-details {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.device-details summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    color: var(--device-accent);
+    font-size: 12px;
+    font-weight: 750;
+    list-style: none;
+}
+
+.device-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.device-details summary::after {
+    content: '+';
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    border: 1px solid color-mix(in srgb, var(--device-accent) 35%, transparent);
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.device-details[open] summary::after {
+    content: '\2212';
+}
+
+.device-details-count {
+    margin-left: auto;
+    color: #9ca3af;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.device-details-content {
+    display: grid;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.device-specs {
+    grid-template-columns: 1fr;
+}
+
+.device-specs div {
+    padding-bottom: 7px;
+    border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
+}
+
+.device-specs div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
 }
 
 .device-tags span {
@@ -1569,11 +1658,12 @@ html.dark .device-tags span {
     }
 
     .device-media {
-        aspect-ratio: 16 / 9;
+        aspect-ratio: 4 / 3;
     }
 
     .device-body {
         min-height: 0;
+        padding: 16px;
     }
 }
 
