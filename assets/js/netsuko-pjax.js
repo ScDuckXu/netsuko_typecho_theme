@@ -16,6 +16,8 @@
     var currentPjaxHref = window.location.href;
     var drawerCloseTimer = null;
     var scrollStateFrame = null;
+    var mottoRequestId = 0;
+    var mottoTypingTimer = null;
     var lateLifecycleListeners = [];
     var postLightboxSelector = '.post-content a.netsuko-image-lightbox[data-fancybox]';
 
@@ -290,6 +292,85 @@
         }, { passive: true });
         window.addEventListener('resize', scheduleReadingProgress);
     }
+
+    function renderMotto(node, text, animate) {
+        if (!node) {
+            return;
+        }
+
+        var quote = node.dataset.mottoQuotes === 'show' ? '"' : '';
+        var output = quote + String(text || '') + quote;
+        window.clearInterval(mottoTypingTimer);
+        node.classList.toggle('netsuko-motto-typing', Boolean(animate));
+
+        if (!animate) {
+            node.textContent = output;
+            return;
+        }
+
+        node.textContent = '';
+        var chars = Array.from(output);
+        var index = 0;
+        mottoTypingTimer = window.setInterval(function () {
+            node.textContent += chars[index] || '';
+            index += 1;
+            if (index >= chars.length) {
+                window.clearInterval(mottoTypingTimer);
+                mottoTypingTimer = null;
+                node.classList.remove('netsuko-motto-typing');
+            }
+        }, 72);
+    }
+
+    theme.initMotto = function (root) {
+        var node = $('#home-motto', root || document);
+        if (!node) {
+            return;
+        }
+
+        var fallback = node.dataset.mottoText || node.textContent.replace(/^"|"$/g, '').trim();
+        var animate = node.dataset.mottoTyping === 'on';
+        var requestId = ++mottoRequestId;
+        renderMotto(node, fallback, animate);
+
+        if (node.dataset.mottoSource !== 'hitokoto') {
+            return;
+        }
+
+        var endpoint = config.motto && config.motto.endpoint;
+        if (!endpoint || typeof window.fetch !== 'function') {
+            return;
+        }
+
+        var controller = typeof window.AbortController === 'function' ? new AbortController() : null;
+        var timeout = window.setTimeout(function () {
+            if (controller) {
+                controller.abort();
+            }
+        }, 4200);
+
+        window.fetch(endpoint, {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store',
+            signal: controller ? controller.signal : undefined
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Hitokoto request failed');
+            }
+            return response.json();
+        }).then(function (data) {
+            var text = data && typeof data.hitokoto === 'string' ? data.hitokoto.trim() : '';
+            if (!text || requestId !== mottoRequestId || !node.isConnected) {
+                return;
+            }
+            node.title = data.from ? '来源：' + data.from : '来源：一言';
+            renderMotto(node, text, animate);
+        }).catch(function () {
+            // Keep the server-rendered fallback when the API is unavailable.
+        }).finally(function () {
+            window.clearTimeout(timeout);
+        });
+    };
 
     function withAssetVersion(url) {
         if (!url || !config.assetVersion || /[?&]v=/.test(url)) {
@@ -886,6 +967,9 @@
         }
         if (typeof theme.initDevices === 'function') {
             theme.initDevices();
+        }
+        if (typeof theme.initMotto === 'function') {
+            theme.initMotto(root);
         }
         if (typeof theme.initBangumi === 'function') {
             theme.initBangumi(root);

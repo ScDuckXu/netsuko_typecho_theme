@@ -68,6 +68,9 @@
         excludes: <?php echo json_encode(netsukoPjaxExcludePaths(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
         assetVersion: <?php echo json_encode(netsukoThemeVersion(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
         fancybox: <?php echo json_encode($fancyboxAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
+        motto: {
+            endpoint: 'https://v1.hitokoto.cn/?encode=json'
+        },
         content: <?php echo json_encode($contentAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
     };
 </script>
@@ -78,6 +81,9 @@
         enabled: false,
         assetVersion: <?php echo json_encode(netsukoThemeVersion(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
         fancybox: <?php echo json_encode($fancyboxAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
+        motto: {
+            endpoint: 'https://v1.hitokoto.cn/?encode=json'
+        },
         content: <?php echo json_encode($contentAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
     };
 </script>
