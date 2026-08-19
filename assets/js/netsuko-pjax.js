@@ -959,6 +959,7 @@
     function runLifecycle(root, currentHref) {
         theme.initMobileDrawer();
         theme.initBackToTop();
+        theme.initSidebar(root);
         if (typeof theme.initCommentForm === 'function') {
             theme.initCommentForm();
         }
@@ -983,6 +984,54 @@
         updateActiveNavigation(currentHref);
         document.dispatchEvent(new CustomEvent('netsuko:pjax:ready', { detail: { root: root || document, url: currentHref || window.location.href } }));
     }
+
+    theme.initSidebar = function (root) {
+        var scope = root || document;
+        var sidebars = $all('.netsuko-sidebar', scope);
+        if (!sidebars.length || window.innerWidth < 768) {
+            return;
+        }
+
+        sidebars.forEach(function (sidebar) {
+            var modules = $all('[data-sidebar-module]', sidebar);
+            var mainColumn = document.querySelector('#main > div:first-child');
+            if (!modules.length || !mainColumn) {
+                return;
+            }
+
+            modules.forEach(function (module) {
+                module.style.display = '';
+            });
+
+            // The server-side limit keeps the module count predictable. This pass
+            // removes the first card that would extend past the article column.
+            var mainBottom = mainColumn.getBoundingClientRect().bottom + window.scrollY;
+            var hidden = false;
+            modules.forEach(function (module) {
+                if (hidden) {
+                    module.style.display = 'none';
+                    return;
+                }
+                var moduleBottom = module.getBoundingClientRect().bottom + window.scrollY;
+                if (moduleBottom > mainBottom + 2) {
+                    module.style.display = 'none';
+                    hidden = true;
+                }
+            });
+        });
+    };
+
+    var sidebarResizeTimer = null;
+    window.addEventListener('resize', function () {
+        if (sidebarResizeTimer) {
+            window.clearTimeout(sidebarResizeTimer);
+        }
+        sidebarResizeTimer = window.setTimeout(function () {
+            if (window.scrollY < 4) {
+                theme.initSidebar(document);
+            }
+        }, 120);
+    });
 
     theme.initMotion = function (root) {
         ensureProgressIndicators();

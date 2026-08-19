@@ -3,8 +3,13 @@ $authorName = netsukoOption('authorName', 'Netsuko');
 $authorAvatar = netsukoOption('authorAvatar', 'https://cravatar.cn/avatar/default?d=mp');
 $authorMotto = netsukoOption('motto', '永远相信美好的事情即将发生');
 $mottoQuotes = netsukoOption('mottoQuotes', 'show');
+$sidebarModuleLimit = netsukoSidebarModuleLimit();
+$sidebarModules = array_slice(netsukoSidebarModules(), 0, $sidebarModuleLimit);
+$sidebarModuleCount = min($sidebarModuleLimit, count($sidebarModules));
+$sidebarOptions = \Typecho\Widget::widget('Widget_Options');
+$sidebarDb = \Typecho\Db::get();
 ?>
-<aside class="space-y-6 sticky top-20">
+<aside class="space-y-6 sticky top-20 netsuko-sidebar" data-module-limit="<?php echo $sidebarModuleLimit; ?>">
     <div class="mb-6">
         <form method="post" action="<?php $this->options->siteUrl(); ?>" class="relative group" role="search">
             <input type="text" name="s" class="w-full px-4 py-2.5 bg-white dark:bg-darkCard border border-gray-100 dark:border-white/5 rounded-2xl shadow-sm focus:outline-none focus:border-teal/50 focus:ring-2 focus:ring-teal/20 text-sm text-gray-900 dark:text-gray-100 transition-all placeholder-gray-400" placeholder="<?php _e('搜索...'); ?>" required />
@@ -14,7 +19,7 @@ $mottoQuotes = netsukoOption('mottoQuotes', 'show');
         </form>
     </div>
 
-    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-glow transition-shadow duration-500 mb-8">
+    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-glow transition-shadow duration-500 mb-8" data-sidebar-base>
         <div class="flex items-center gap-4 mb-6">
             <img src="<?php echo netsukoUrl($authorAvatar); ?>" alt="<?php echo netsukoEscape($authorName); ?>" class="w-16 h-16 rounded-2xl object-cover" />
             <div>
@@ -72,4 +77,75 @@ $mottoQuotes = netsukoOption('mottoQuotes', 'show');
             </div>
         <?php endif; ?>
     </div>
+
+    <?php if ($sidebarModuleCount > 0): ?>
+        <div class="space-y-6" data-sidebar-modules>
+            <?php if (in_array('stats', $sidebarModules, true)): ?>
+                <?php
+                $sidebarPosts = $sidebarDb->fetchObject($sidebarDb->select('COUNT(cid) AS count')->from('table.contents')->where('type = ?', 'post')->where('status = ?', 'publish'));
+                $sidebarComments = $sidebarDb->fetchObject($sidebarDb->select('COUNT(coid) AS count')->from('table.comments')->where('type = ?', 'comment')->where('status = ?', 'approved'));
+                $sidebarLastPost = $sidebarDb->fetchObject($sidebarDb->select('modified')->from('table.contents')->where('type = ?', 'post')->where('status = ?', 'publish')->order('modified', \Typecho\Db::SORT_DESC)->limit(1));
+                ?>
+                <section class="netsuko-sidebar-card bg-white dark:bg-darkCard rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm" data-sidebar-module>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">站点概览</h3>
+                    <dl class="grid grid-cols-2 gap-3 text-sm">
+                        <div><dt class="text-gray-400 dark:text-gray-500">文章</dt><dd class="mt-1 font-semibold text-gray-800 dark:text-gray-200"><?php echo (int) ($sidebarPosts->count ?? 0); ?></dd></div>
+                        <div><dt class="text-gray-400 dark:text-gray-500">评论</dt><dd class="mt-1 font-semibold text-gray-800 dark:text-gray-200"><?php echo (int) ($sidebarComments->count ?? 0); ?></dd></div>
+                    </dl>
+                    <?php if ($sidebarLastPost && !empty($sidebarLastPost->modified)): ?>
+                        <p class="mt-4 text-xs text-gray-400 dark:text-gray-500">最后更新 <?php echo date('Y-m-d', (int) $sidebarLastPost->modified); ?></p>
+                    <?php endif; ?>
+                </section>
+            <?php endif; ?>
+
+            <?php if (in_array('comments', $sidebarModules, true)): ?>
+                <?php
+                $sidebarRecentComments = $sidebarDb->fetchAll(
+                    $sidebarDb->select('table.comments.coid', 'table.comments.cid', 'table.comments.author', 'table.comments.text', 'table.contents.title')
+                        ->from('table.comments')
+                        ->join('table.contents', 'table.comments.cid = table.contents.cid')
+                        ->where('table.comments.type = ?', 'comment')
+                        ->where('table.comments.status = ?', 'approved')
+                        ->where('table.contents.status = ?', 'publish')
+                        ->order('table.comments.created', \Typecho\Db::SORT_DESC)
+                        ->limit(4)
+                );
+                ?>
+                <?php if ($sidebarRecentComments): ?>
+                    <section class="netsuko-sidebar-card bg-white dark:bg-darkCard rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm" data-sidebar-module>
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">最近评论</h3>
+                        <div class="space-y-3">
+                            <?php foreach ($sidebarRecentComments as $sidebarComment): ?>
+                                <?php $sidebarCommentUrl = netsukoContentPermalink(['cid' => (int) $sidebarComment['cid'], 'type' => 'post']) . '#comment-' . (int) $sidebarComment['coid']; ?>
+                                <a href="<?php echo netsukoUrl($sidebarCommentUrl); ?>" class="block text-sm group">
+                                    <div class="flex items-center justify-between gap-2"><span class="font-medium text-gray-700 dark:text-gray-300 group-hover:text-teal"><?php echo netsukoEscape($sidebarComment['author']); ?></span><span class="text-xs text-gray-400">#<?php echo (int) $sidebarComment['coid']; ?></span></div>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2"><?php echo netsukoEscape(netsukoMailPlainText((string) $sidebarComment['text'])); ?></p>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+            <?php endif; ?>
+
+            <?php foreach (['categories' => ['category', '分类目录'], 'tags' => ['tag', '标签']] as $sidebarMetaModule => $sidebarMetaConfig): ?>
+                <?php if (!in_array($sidebarMetaModule, $sidebarModules, true)) continue; ?>
+                <?php
+                $sidebarMetaRows = $sidebarDb->fetchAll(
+                    $sidebarDb->select('mid', 'name', 'slug')->from('table.metas')->where('type = ?', $sidebarMetaConfig[0])->order('order', \Typecho\Db::SORT_ASC)->limit(12)
+                );
+                ?>
+                <?php if ($sidebarMetaRows): ?>
+                    <section class="netsuko-sidebar-card bg-white dark:bg-darkCard rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm" data-sidebar-module>
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3"><?php echo $sidebarMetaConfig[1]; ?></h3>
+                        <div class="flex flex-wrap gap-2">
+                            <?php foreach ($sidebarMetaRows as $sidebarMetaRow): ?>
+                                <?php $sidebarMetaPath = \Typecho\Router::url($sidebarMetaConfig[0], ['mid' => (int) $sidebarMetaRow['mid'], 'slug' => (string) $sidebarMetaRow['slug']]); ?>
+                                <a href="<?php echo netsukoUrl(\Typecho\Common::url($sidebarMetaPath, $sidebarOptions->index)); ?>" class="px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-white/5 text-xs text-gray-600 dark:text-gray-400 hover:text-teal hover:bg-teal/10 transition-colors"><?php echo netsukoEscape($sidebarMetaRow['name']); ?></a>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </aside>

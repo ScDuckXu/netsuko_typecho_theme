@@ -309,6 +309,22 @@ function themeConfig($form)
     $sidebarLinks = new \Typecho\Widget\Helper\Form\Element\Textarea('sidebarLinks', NULL, NULL, _t('侧边栏自定义超链接'), _t('一行一个链接，格式为：名称|链接。例如：<br><code>链接名称|https://example.com</code><br>留空则不显示。'));
     $form->addInput($sidebarLinks);
 
+    netsukoConfigSection($form, '侧栏模块', '选择首页右侧显示的辅助模块。模块数量会根据首页每页文章数自动限制，移动端不强制裁剪。');
+
+    $sidebarModules = new \Typecho\Widget\Helper\Form\Element\Checkbox(
+        'sidebarModules',
+        array(
+            'stats' => _t('站点统计'),
+            'comments' => _t('最近评论'),
+            'categories' => _t('分类目录'),
+            'tags' => _t('标签')
+        ),
+        array('stats', 'comments', 'categories'),
+        _t('启用侧栏模块'),
+        _t('默认开启站点统计、最近评论和分类目录；标签数量较多时建议保持关闭。')
+    );
+    $form->addInput($sidebarModules);
+
     //页脚部分
     netsukoConfigSection($form, '页脚与站点信息', '备案、RSS 与状态页等链接。');
 
@@ -984,6 +1000,7 @@ function netsukoConfigBackupTools($form): void {
         'socialBilibili',
         'socialWechat',
         'sidebarLinks',
+        'sidebarModules',
         'icpNum',
         'icpUrl',
         'rssFeed',
@@ -1403,6 +1420,26 @@ function netsukoOption(string $name, $default = '') {
     $options = \Typecho\Widget::widget('Widget_Options');
     $value = $options->{$name};
     return $value === null || $value === '' ? $default : $value;
+}
+
+function netsukoSidebarModules(): array {
+    $value = netsukoOption('sidebarModules', ['stats', 'comments', 'categories']);
+    if (is_array($value)) {
+        $modules = $value;
+    } else {
+        $modules = preg_split('/[\s,|]+/', (string) $value, -1, PREG_SPLIT_NO_EMPTY);
+    }
+
+    $allowed = ['stats', 'comments', 'categories', 'tags'];
+    return array_values(array_unique(array_intersect($allowed, array_map('strval', $modules ?: []))));
+}
+
+function netsukoSidebarModuleLimit(): int {
+    $options = \Typecho\Widget::widget('Widget_Options');
+    $pageSize = (int) ($options->postsPageSize ?: 5);
+    $pageSize = max(1, min(30, $pageSize));
+
+    return max(2, min(6, (int) ceil($pageSize / 2) + 1));
 }
 
 function netsukoThemePalette(): string {
