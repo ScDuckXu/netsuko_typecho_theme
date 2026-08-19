@@ -14,7 +14,6 @@ $mottoQuotes = netsukoOption('mottoQuotes', 'show');
         </form>
     </div>
 
-    <?php if (!netsukoSimpleMode()): ?>
     <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-glow transition-shadow duration-500 mb-8">
         <div class="flex items-center gap-4 mb-6">
             <img src="<?php echo netsukoUrl($authorAvatar); ?>" alt="<?php echo netsukoEscape($authorName); ?>" class="w-16 h-16 rounded-2xl object-cover" />
@@ -73,5 +72,4 @@ $mottoQuotes = netsukoOption('mottoQuotes', 'show');
             </div>
         <?php endif; ?>
     </div>
-    <?php endif; ?>
 </aside>

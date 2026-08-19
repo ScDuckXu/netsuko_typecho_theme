@@ -53,20 +53,6 @@ function themeConfig($form)
     );
     $form->addInput($colorScheme);
 
-    netsukoConfigSection($form, '运行模式', '用一个总模式控制主要增强功能；完整模式继续沿用现有细项设置。');
-
-    $featureMode = new \Typecho\Widget\Helper\Form\Element\Select(
-        'featureMode',
-        array(
-            'full' => _t('完整模式（默认）'),
-            'simple' => _t('简洁模式')
-        ),
-        'full',
-        _t('主题功能模式'),
-        _t('完整模式保持当前行为。简洁模式暂停 PJAX、LazyLoad、代码高亮、LaTeX、Bangumi 动态请求和侧栏资料模块，适合排障或只保留基础阅读体验。')
-    );
-    $form->addInput($featureMode);
-
     netsukoConfigSection($form, '静态资源', '选择 Tailwind CSS 与 Fancybox 的加载来源。默认使用主题内置本地资源。');
 
     $assetSourceOptions = array(
@@ -917,7 +903,6 @@ function netsukoConfigBackupTools($form): void {
         'postFont',
         'defaultThumb',
         'colorScheme',
-        'featureMode',
         'tailwindAssetSource',
         'tailwindCustomUrl',
         'fancyboxAssetSource',
@@ -1174,22 +1159,20 @@ function netsukoConfigVersionChecker($form): void {
         '<p>此检查不会修改服务器上的任何文件，仅检查更新，需要手动下载覆盖。</p>' .
         '<div class="netsuko-version-row">' .
             '<span class="netsuko-version-pill">当前版本：' . netsukoEscape($version) . '</span>' .
-            '<button type="button" class="btn" id="netsuko-check-update">检查最新版本</button>' .
         '</div>' .
-        '<div class="netsuko-version-status" id="netsuko-version-status">点击按钮检查 GitHub 最新 Release。</div>' .
+        '<div class="netsuko-version-status" id="netsuko-version-status">正在查询 GitHub 最新 Release...</div>' .
         '<div class="netsuko-version-links" id="netsuko-version-links">' .
             '<a href="' . netsukoEscape($releaseUrl) . '" target="_blank" rel="noopener noreferrer" id="netsuko-release-link">打开 Release</a>' .
             '<a href="#" target="_blank" rel="noopener noreferrer" id="netsuko-download-link">下载更新包</a>' .
         '</div>' .
         '<script>
 (function () {
-    var button = document.getElementById("netsuko-check-update");
     var status = document.getElementById("netsuko-version-status");
     var links = document.getElementById("netsuko-version-links");
     var releaseLink = document.getElementById("netsuko-release-link");
     var downloadLink = document.getElementById("netsuko-download-link");
-    var card = button ? button.closest(".netsuko-version-card") : null;
-    if (!button || !status || !card) {
+    var card = status ? status.closest(".netsuko-version-card") : null;
+    if (!status || !card) {
         return;
     }
 
@@ -1216,8 +1199,7 @@ function netsukoConfigVersionChecker($form): void {
         return 0;
     }
 
-    button.addEventListener("click", function () {
-        button.disabled = true;
+    function checkUpdate() {
         status.textContent = "正在查询 GitHub Releases...";
         if (links) {
             links.style.display = "none";
@@ -1262,11 +1244,10 @@ function netsukoConfigVersionChecker($form): void {
                 if (links) {
                     links.style.display = "flex";
                 }
-            })
-            .finally(function () {
-                button.disabled = false;
             });
-    });
+    }
+
+    checkUpdate();
 })();
 </script>'
     );
@@ -1424,17 +1405,6 @@ function netsukoBangumiStates(): array {
 }
 
 function netsukoBangumiPageData($archive): array {
-    if (netsukoSimpleMode()) {
-        return [
-            'username' => '',
-            'profile' => [],
-            'groups' => [],
-            'fetchedAt' => 0,
-            'stale' => false,
-            'error' => '简洁模式已暂停 Bangumi 动态数据'
-        ];
-    }
-
     $configured = trim((string) netsukoOption('bangumiProfile', ''));
     $source = $configured !== '' ? $configured : (string) ($archive->text ?? '');
     $username = netsukoBangumiUsername($source);
@@ -2067,20 +2037,7 @@ function netsukoFancyboxAssets(): array {
     }
 }
 
-function netsukoFeatureMode(): string {
-    $mode = (string) netsukoOption('featureMode', 'full');
-    return $mode === 'simple' ? 'simple' : 'full';
-}
-
-function netsukoSimpleMode(): bool {
-    return netsukoFeatureMode() === 'simple';
-}
-
 function netsukoPjaxEnabled(): bool {
-    if (netsukoSimpleMode()) {
-        return false;
-    }
-
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->pjaxEnabled ?: 'on') === 'on';
 }
@@ -2102,19 +2059,11 @@ function netsukoPjaxScriptUrl(): string {
 }
 
 function netsukoLazyLoadEnabled(): bool {
-    if (netsukoSimpleMode()) {
-        return false;
-    }
-
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->lazyLoadEnabled ?: 'on') === 'on';
 }
 
 function netsukoCodeHighlightEnabled(): bool {
-    if (netsukoSimpleMode()) {
-        return false;
-    }
-
     $options = \Typecho\Widget::widget('Widget_Options');
     return (string) ($options->codeHighlightEnabled ?: 'on') === 'on';
 }
@@ -2135,10 +2084,6 @@ function netsukoContentAssets(): array {
 }
 
 function netsukoLatexEnabled($archive): bool {
-    if (netsukoSimpleMode()) {
-        return false;
-    }
-
     $options = \Typecho\Widget::widget('Widget_Options');
     $field = 'default';
 
