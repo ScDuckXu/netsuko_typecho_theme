@@ -613,11 +613,12 @@ form.netsuko-config-form {
 
 .netsuko-config-nav {
     position: fixed;
-    top: clamp(120px, 14vh, 156px);
+    /* Keep the floating panel below Typecho's page tabs (which end around 138px). */
+    top: clamp(148px, 14vh, 168px);
     left: max(12px, calc(50% - 390px));
     z-index: 20;
     width: 188px;
-    max-height: calc(100vh - 144px);
+    max-height: calc(100vh - 172px);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 12px;
@@ -675,8 +676,8 @@ form.netsuko-config-form {
     }
 
     .netsuko-config-nav {
-        position: sticky;
-        top: 8px;
+        position: relative;
+        top: auto;
         left: auto;
         z-index: 5;
         width: auto;
