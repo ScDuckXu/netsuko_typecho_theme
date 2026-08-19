@@ -129,6 +129,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    min-width: 0;
     margin-bottom: 24px;
 }
 
@@ -146,6 +147,9 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--card-bg);
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .bangumi-tabs button {
@@ -419,6 +423,8 @@
     .bangumi-tabs {
         display: flex;
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
         overflow-x: auto;
         scrollbar-width: none;
     }
@@ -909,6 +915,28 @@ body #comments .comment-body {
     width: 100%; 
     min-width: 0;
     box-sizing: border-box;
+}
+body #comments .comment-body img.avatar {
+    display: block;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 2.5rem;
+    border-radius: 1rem;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px var(--teal-glow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+body #comments .comment-body .group:hover img.avatar {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--teal-glow);
+}
+@media (min-width: 768px) {
+    body #comments .comment-body img.avatar {
+        width: 3rem;
+        height: 3rem;
+        flex-basis: 3rem;
+    }
 }
 body #comments .comment-nested {
     margin-left: 1rem;

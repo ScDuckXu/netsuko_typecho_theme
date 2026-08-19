@@ -3396,7 +3396,7 @@ function threadedComments($comments, $options) {
             
             <div class="flex gap-4 group">
                 <div class="flex-shrink-0 mt-1">
-                    <?php $comments->gravatar('48', 'w-10 h-10 md:w-12 md:h-12 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/5 transition-transform duration-300 group-hover:scale-105 group-hover:shadow-glow'); ?>
+                    <?php $comments->gravatar(48); ?>
                 </div>
                 <div class="flex-grow w-full overflow-hidden">
                     <div class="flex items-center justify-between mb-1.5">
