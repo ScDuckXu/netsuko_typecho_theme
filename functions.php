@@ -613,11 +613,11 @@ form.netsuko-config-form {
 
 .netsuko-config-nav {
     position: fixed;
-    top: 88px;
+    top: clamp(120px, 14vh, 156px);
     left: max(12px, calc(50% - 390px));
     z-index: 20;
     width: 188px;
-    max-height: calc(100vh - 112px);
+    max-height: calc(100vh - 144px);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 12px;
@@ -652,6 +652,10 @@ form.netsuko-config-form {
     color: #0f766e;
 }
 
+.netsuko-config-nav-toggle {
+    display: none;
+}
+
 .netsuko-config-submit {
     position: sticky;
     bottom: 12px;
@@ -665,7 +669,7 @@ form.netsuko-config-form {
     backdrop-filter: blur(10px);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
     form.netsuko-config-form {
         padding-left: 0;
     }
@@ -686,24 +690,36 @@ form.netsuko-config-form {
         margin: 0 0 5px;
     }
 
-    .netsuko-config-nav nav {
+    .netsuko-config-nav-toggle {
         display: flex;
-        gap: 4px;
-        overflow-x: auto;
-        scrollbar-width: thin;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #374151;
+        font-size: 13px;
+        text-align: left;
+    }
+
+    .netsuko-config-nav nav {
+        display: none;
+        max-height: 280px;
+        margin-top: 8px;
+        overflow-y: auto;
+        border-top: 1px solid #e5e7eb;
     }
 
     .netsuko-config-nav a {
-        flex: 0 0 auto;
         border-left: 0;
-        border-bottom: 2px solid transparent;
-        white-space: nowrap;
+        border-bottom: 1px solid #f3f4f6;
     }
 
-    .netsuko-config-nav a:hover,
-    .netsuko-config-nav a.is-active {
-        border-left-color: transparent;
-        border-bottom-color: #0f766e;
+    .netsuko-config-nav.is-open nav {
+        display: block;
     }
 
     .netsuko-config-submit {
@@ -827,8 +843,16 @@ function netsukoConfigAdminEnhancements($form): void {
         var nav = document.createElement('aside');
         nav.className = 'netsuko-config-nav';
         nav.setAttribute('aria-label', '设置分组导航');
-        nav.innerHTML = '<strong>设置导航</strong><nav></nav>';
+        nav.innerHTML = '<strong>设置导航</strong><button type="button" class="netsuko-config-nav-toggle" aria-expanded="false">选择设置分组<span aria-hidden="true">⌄</span></button><nav></nav>';
         var navList = nav.querySelector('nav');
+        var navToggle = nav.querySelector('.netsuko-config-nav-toggle');
+
+        if (navToggle) {
+            navToggle.addEventListener('click', function () {
+                var isOpen = nav.classList.toggle('is-open');
+                navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        }
 
         sections.forEach(function (section, index) {
             var id = section.id || ('netsuko-config-section-' + (index + 1));
@@ -840,6 +864,11 @@ function netsukoConfigAdminEnhancements($form): void {
                 event.preventDefault();
                 section.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 history.replaceState(null, '', '#' + id);
+                nav.classList.remove('is-open');
+                if (navToggle) {
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    navToggle.firstChild.textContent = link.textContent;
+                }
             });
             navList.appendChild(link);
         });
@@ -860,6 +889,14 @@ function netsukoConfigAdminEnhancements($form): void {
                     links.forEach(function (link) {
                         link.classList.toggle('is-active', link.getAttribute('href') === '#' + entry.target.id);
                     });
+                    if (navToggle) {
+                        var activeLink = links.filter(function (link) {
+                            return link.classList.contains('is-active');
+                        })[0];
+                        if (activeLink) {
+                            navToggle.firstChild.textContent = activeLink.textContent;
+                        }
+                    }
                 });
             }, { rootMargin: '-18% 0px -68% 0px', threshold: 0 });
             sections.forEach(function (section) { observer.observe(section); });
