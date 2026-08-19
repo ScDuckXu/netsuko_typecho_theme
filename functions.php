@@ -612,15 +612,20 @@ form.netsuko-config-form {
 }
 
 .netsuko-config-nav {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: fixed;
+    top: 88px;
+    left: max(12px, calc(50% - 390px));
+    z-index: 20;
     width: 188px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    scrollbar-width: thin;
 }
 
 .netsuko-config-nav strong {
@@ -668,7 +673,11 @@ form.netsuko-config-form {
     .netsuko-config-nav {
         position: sticky;
         top: 8px;
+        left: auto;
+        z-index: 5;
         width: auto;
+        max-height: none;
+        overflow-y: visible;
         margin: 0 0 16px;
         padding: 8px;
     }
