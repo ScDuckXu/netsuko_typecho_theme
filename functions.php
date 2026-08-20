@@ -5,7 +5,6 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 \Widget\Feedback::pluginHandle()->finishComment = 'netsukoHandleCommentMailNotification';
 \Widget\Comments\Edit::pluginHandle()->finishComment = 'netsukoHandleCommentMailNotification';
 \Widget\Comments\Edit::pluginHandle()->mark = 'netsukoHandleCommentStatusMailNotification';
-\Typecho\Plugin::factory('admin/write-post.php')->bottom = 'netsukoAdminWritePostBottom';
 register_shutdown_function('netsukoMaybeRunAutoBackup');
 
 function themeConfig($form)
@@ -192,27 +191,6 @@ function themeConfig($form)
     $mottoBanner = new \Typecho\Widget\Helper\Form\Element\Text('mottoBanner', null, '永远相信美好的事情即将发生', _t('Banner 文本'), _t('显示在首页 Banner 中，默认与座右铭一致'));
     $form->addInput($mottoBanner);
 
-    $mottoSource = new \Typecho\Widget\Helper\Form\Element\Select(
-        'mottoSource',
-        array(
-            'custom' => _t('使用自定义文本'),
-            'hitokoto' => _t('使用一言（hitokoto.cn）')
-        ),
-        'custom',
-        _t('Banner 文本来源'),
-        _t('选择一言后，首页会在浏览器中请求 hitokoto.cn；请求失败时自动保留上面的自定义文本。')
-    );
-    $form->addInput($mottoSource);
-
-    $mottoTyping = new \Typecho\Widget\Helper\Form\Element\Radio(
-        'mottoTyping',
-        array('off' => _t('关闭打字动画'), 'on' => _t('开启打字动画')),
-        'off',
-        _t('Banner 打字动画'),
-        _t('控制首页 Banner 座右铭逐字出现的效果。默认关闭；一言和自定义文本均可使用。')
-    );
-    $form->addInput($mottoTyping);
-
     $motto = new \Typecho\Widget\Helper\Form\Element\Text('motto', null, '永远相信美好的事情即将发生', _t('座右铭'), _t('显示在侧栏名片中'));
     $form->addInput($motto);
 
@@ -325,17 +303,6 @@ function themeConfig($form)
         _t('默认开启站点统计、最近评论和分类目录；标签数量较多时建议保持关闭。')
     );
     $form->addInput($sidebarModules);
-
-    netsukoConfigSection($form, '说说', '使用普通 Typecho 文章保存短内容。请先创建一个 slug 为 shuoshuo 的分类；分类 ID 可填写，也可以留空让主题自动查找。');
-
-    $shuoshuoCategoryId = new \Typecho\Widget\Helper\Form\Element\Text(
-        'shuoshuoCategoryId',
-        NULL,
-        '0',
-        _t('说说分类 ID'),
-        _t('在后台分类管理中查看分类 ID。快捷按钮会自动选中该分类；留空或填 0 时，会自动寻找 slug 为 shuoshuo 的分类。')
-    );
-    $form->addInput($shuoshuoCategoryId);
 
     netsukoConfigSection($form, '图片署名', '使用 SVG 覆盖层显示署名，并在浏览器中将水印合成到 Fancybox 下载文件。');
 
@@ -1039,8 +1006,6 @@ function netsukoConfigBackupTools($form): void {
         'bangumiItemsPerStatus',
         'bangumiCacheHours',
         'mottoBanner',
-        'mottoSource',
-        'mottoTyping',
         'motto',
         'mottoFont',
         'mottoQuotes',
@@ -1060,7 +1025,6 @@ function netsukoConfigBackupTools($form): void {
         'socialWechat',
         'sidebarLinks',
         'sidebarModules',
-        'shuoshuoCategoryId',
         'imageWatermarkEnabled',
         'imageWatermarkText',
         'imageWatermarkPosition',
@@ -1484,60 +1448,6 @@ function netsukoOption(string $name, $default = '') {
     $options = \Typecho\Widget::widget('Widget_Options');
     $value = $options->{$name};
     return $value === null || $value === '' ? $default : $value;
-}
-
-function netsukoShuoshuoCategoryId(): int {
-    $configured = max(0, (int) netsukoOption('shuoshuoCategoryId', '0'));
-    if ($configured > 0) {
-        return $configured;
-    }
-
-    $categories = \Widget\Metas\Category\Rows::alloc();
-    while ($categories->next()) {
-        if (strtolower((string) $categories->slug) === 'shuoshuo') {
-            return (int) $categories->mid;
-        }
-    }
-
-    return 0;
-}
-
-function netsukoAdminWritePostBottom($post): void {
-    $options = \Typecho\Widget::widget('Widget_Options');
-    $payload = json_encode([
-        'url' => \Typecho\Common::url('write-post.php?netsuko=shuoshuo', (string) $options->adminUrl),
-        'categoryId' => netsukoShuoshuoCategoryId()
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-    echo '<script>(function(){'
-        . 'var config=' . $payload . ';'
-        . 'function init(){'
-        . 'var target=document.querySelector("#btn-submit");'
-        . 'var parent=target&&target.parentNode;'
-        . 'if(!parent||document.getElementById("netsuko-write-shuoshuo")){return;}'
-        . 'var link=document.createElement("a");'
-        . 'link.id="netsuko-write-shuoshuo";'
-        . 'link.className="btn";'
-        . 'link.style.whiteSpace="nowrap";'
-        . 'link.style.paddingLeft="8px";'
-        . 'link.style.paddingRight="8px";'
-        . 'link.style.fontSize="13px";'
-        . 'link.href=config.url;'
-        . 'link.textContent=window.matchMedia("(max-width: 600px)").matches?"写说说":"撰写说说";'
-        . 'link.title="新建一条说说";'
-        . 'parent.insertBefore(link,target);'
-        . 'if(new URLSearchParams(window.location.search).get("netsuko")!=="shuoshuo"){return;}'
-        . 'var categories=document.querySelectorAll("input[name=\\"category[]\\"]");'
-        . 'if(config.categoryId>0){'
-        . 'for(var i=0;i<categories.length;i++){categories[i].checked=false;}'
-        . 'var category=document.getElementById("category-"+config.categoryId);'
-        . 'if(category){category.checked=true;}'
-        . '}'
-        . 'var title=document.getElementById("title");'
-        . 'if(title){title.value="";title.placeholder="说说标题（可留空）";}'
-        . '}'
-        . 'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",init,{once:true});}else{init();}'
-        . '})();</script>';
 }
 
 function netsukoSidebarModules(): array {
