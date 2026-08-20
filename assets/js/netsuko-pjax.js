@@ -18,6 +18,7 @@
     var scrollStateFrame = null;
     var mottoRequestId = 0;
     var mottoTypingTimer = null;
+    var watermarkDownloadReady = false;
     var lateLifecycleListeners = [];
     var postLightboxSelector = '.post-content a.netsuko-image-lightbox[data-fancybox]';
 
@@ -127,6 +128,161 @@
         transitionTimer = window.setTimeout(function () {
             document.documentElement.classList.remove('netsuko-pjax-complete');
         }, 520);
+    }
+
+    function watermarkConfig() {
+        var value = config.watermark || {};
+        return {
+            enabled: value.enabled === true,
+            text: String(value.text || '').trim() || 'Netsuko',
+            position: ['bottom-right', 'bottom-left', 'top-right', 'top-left'].indexOf(value.position) !== -1 ? value.position : 'bottom-right',
+            opacity: Math.max(0.08, Math.min(0.5, Number(value.opacity) || 0.2))
+        };
+    }
+
+    function watermarkPosition(position) {
+        return {
+            'bottom-right': { x: 1, y: 1, anchor: 'end', baseline: 'ideographic' },
+            'bottom-left': { x: 0, y: 1, anchor: 'start', baseline: 'ideographic' },
+            'top-right': { x: 1, y: 0, anchor: 'end', baseline: 'hanging' },
+            'top-left': { x: 0, y: 0, anchor: 'start', baseline: 'hanging' }
+        }[position];
+    }
+
+    function makeWatermarkSvg(configValue) {
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        var position = watermarkPosition(configValue.position);
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.classList.add('netsuko-watermark-overlay');
+        text.textContent = configValue.text;
+        text.setAttribute('x', position.x ? '96' : '4');
+        text.setAttribute('y', position.y ? '96' : '4');
+        text.setAttribute('text-anchor', position.anchor);
+        text.setAttribute('dominant-baseline', position.baseline);
+        text.setAttribute('font-family', 'system-ui, sans-serif');
+        text.setAttribute('font-size', '4');
+        text.setAttribute('font-weight', '600');
+        text.setAttribute('letter-spacing', '0');
+        text.setAttribute('fill', '#ffffff');
+        text.setAttribute('stroke', '#000000');
+        text.setAttribute('stroke-width', '0.7');
+        text.setAttribute('paint-order', 'stroke');
+        text.setAttribute('opacity', String(configValue.opacity));
+        svg.appendChild(text);
+        return svg;
+    }
+
+    function watermarkTarget(image) {
+        var link = image.closest('[data-fancybox]');
+        if (link) {
+            return link;
+        }
+        return image.parentElement && image.parentElement.tagName.toLowerCase() === 'picture'
+            ? image.parentElement
+            : image.parentElement;
+    }
+
+    theme.initWatermark = function (root) {
+        var configValue = watermarkConfig();
+        var scope = root || document;
+        if (!configValue.enabled) {
+            $all('.netsuko-watermark-overlay', scope).forEach(function (overlay) { overlay.remove(); });
+            return;
+        }
+
+        $all('.post-content img, [data-fancybox] img', scope).forEach(function (image) {
+            if (image.closest('[data-no-watermark], [data-no-lightbox]')) {
+                return;
+            }
+            var target = watermarkTarget(image);
+            if (!target || target.closest('.netsuko-watermark-skip')) {
+                return;
+            }
+            if (target.dataset.netsukoWatermarkReady === 'true') {
+                return;
+            }
+            target.classList.add('netsuko-watermark-target');
+            target.dataset.netsukoWatermarkReady = 'true';
+            target.appendChild(makeWatermarkSvg(configValue));
+        });
+
+        if (watermarkDownloadReady) {
+            return;
+        }
+        watermarkDownloadReady = true;
+        document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('[data-fancybox-download], .f-button[title="Download"], .f-button[aria-label="Download"]') : null;
+            if (!button || !watermarkConfig().enabled) {
+                return;
+            }
+            var instance = window.Fancybox && typeof window.Fancybox.getInstance === 'function' ? window.Fancybox.getInstance() : null;
+            var slide = instance && instance.getSlide ? instance.getSlide() : null;
+            var source = slide && (slide.src || (slide.triggerEl && slide.triggerEl.href));
+            if (!source || !/^https?:/i.test(source)) {
+                return;
+            }
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            downloadWatermarkedImage(source, slide && slide.triggerEl, watermarkConfig());
+        }, true);
+    };
+
+    function downloadOriginalImage(source, trigger) {
+        var link = document.createElement('a');
+        link.href = source;
+        link.download = ((trigger && trigger.querySelector('img')?.alt) || 'netsuko-image') + '.png';
+        link.rel = 'noopener';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    function downloadWatermarkedImage(source, trigger, configValue) {
+        var image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = function () {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            var width = image.naturalWidth;
+            var height = image.naturalHeight;
+            var fontSize = Math.max(14, Math.round(Math.min(width, height) * 0.035));
+            var pad = Math.max(12, Math.round(fontSize * 0.8));
+            var position = watermarkPosition(configValue.position);
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(image, 0, 0, width, height);
+            context.font = '600 ' + fontSize + 'px system-ui, sans-serif';
+            context.textBaseline = position.baseline;
+            context.textAlign = position.anchor;
+            context.lineWidth = Math.max(2, fontSize * 0.16);
+            context.strokeStyle = 'rgba(0, 0, 0, ' + Math.min(0.8, configValue.opacity * 2.5) + ')';
+            context.fillStyle = 'rgba(255, 255, 255, ' + configValue.opacity + ')';
+            var x = position.x ? width - pad : pad;
+            var y = position.y ? height - pad : pad;
+            context.strokeText(configValue.text, x, y);
+            context.fillText(configValue.text, x, y);
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    downloadOriginalImage(source, trigger);
+                    return;
+                }
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = ((trigger && trigger.querySelector('img')?.alt) || 'netsuko-image') + '-watermarked.png';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+            }, 'image/png');
+        };
+        image.onerror = function () {
+            downloadOriginalImage(source, trigger);
+        };
+        image.src = source;
     }
 
     function resetProgressIndicators() {
@@ -979,6 +1135,7 @@
         theme.initCodeHighlight(root);
         theme.initLatex(root);
         theme.initPostLightbox(root);
+        theme.initWatermark(root);
         theme.initTurnstile(root);
         theme.initMotion(root);
         updateActiveNavigation(currentHref);

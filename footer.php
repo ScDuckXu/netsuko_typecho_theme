@@ -71,6 +71,7 @@
         motto: {
             endpoint: 'https://v1.hitokoto.cn/?encode=json'
         },
+        watermark: <?php echo json_encode(netsukoWatermarkConfig(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
         content: <?php echo json_encode($contentAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
     };
 </script>
@@ -84,6 +85,7 @@
         motto: {
             endpoint: 'https://v1.hitokoto.cn/?encode=json'
         },
+        watermark: <?php echo json_encode(netsukoWatermarkConfig(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>,
         content: <?php echo json_encode($contentAssets, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
     };
 </script>

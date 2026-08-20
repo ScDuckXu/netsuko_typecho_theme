@@ -1727,10 +1727,120 @@ html.dark .device-tags span {
     max-width: 100%;
 }
 
+.netsuko-shuoshuo-list {
+    display: grid;
+    gap: 18px;
+}
+
+.netsuko-shuoshuo-item {
+    position: relative;
+    min-width: 0;
+    padding: 20px 22px 18px 24px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-left: 3px solid var(--teal);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+html.dark .netsuko-shuoshuo-item {
+    border-color: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--teal);
+    background: rgba(31, 41, 55, 0.86);
+    box-shadow: none;
+}
+
+.netsuko-shuoshuo-meta,
+.netsuko-shuoshuo-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.netsuko-shuoshuo-meta a,
+.netsuko-shuoshuo-footer a {
+    color: var(--teal);
+}
+
+.netsuko-shuoshuo-title {
+    margin: 12px 0 0;
+    color: #111827;
+    font-size: clamp(18px, 2vw, 24px);
+    font-weight: 650;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+html.dark .netsuko-shuoshuo-title {
+    color: #f3f4f6;
+}
+
+.netsuko-shuoshuo-item .post-content {
+    margin-top: 12px;
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+html.dark .netsuko-shuoshuo-item .post-content {
+    color: #d1d5db;
+}
+
+.netsuko-shuoshuo-item .post-content > :first-child {
+    margin-top: 0;
+}
+
+.netsuko-shuoshuo-item .post-content > :last-child {
+    margin-bottom: 0;
+}
+
+.netsuko-shuoshuo-footer {
+    justify-content: flex-start;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+html.dark .netsuko-shuoshuo-footer {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+    .netsuko-shuoshuo-item {
+        padding: 16px 16px 15px 18px;
+        border-radius: 8px;
+    }
+
+    .netsuko-shuoshuo-item .post-content {
+        font-size: 14px;
+        line-height: 1.75;
+    }
+}
+
 .post-content pre,
 .post-content table {
     overflow-x: auto;
     display: block;
+}
+
+.netsuko-watermark-target {
+    position: relative !important;
+}
+
+.netsuko-watermark-target > .netsuko-watermark-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
 }
 
 @media (prefers-reduced-motion: reduce) {
