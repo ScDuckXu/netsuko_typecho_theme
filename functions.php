@@ -191,6 +191,15 @@ function themeConfig($form)
     $mottoBanner = new \Typecho\Widget\Helper\Form\Element\Text('mottoBanner', null, '永远相信美好的事情即将发生', _t('Banner 文本'), _t('显示在首页 Banner 中，默认与座右铭一致'));
     $form->addInput($mottoBanner);
 
+    $mottoTyping = new \Typecho\Widget\Helper\Form\Element\Radio(
+        'mottoTyping',
+        array('off' => _t('关闭打字动画'), 'on' => _t('开启打字动画')),
+        'off',
+        _t('Banner 打字动画'),
+        _t('控制首页 Banner 座右铭逐字出现的效果。仅使用自定义 Banner 文本，不会请求外部接口。')
+    );
+    $form->addInput($mottoTyping);
+
     $motto = new \Typecho\Widget\Helper\Form\Element\Text('motto', null, '永远相信美好的事情即将发生', _t('座右铭'), _t('显示在侧栏名片中'));
     $form->addInput($motto);
 
@@ -1006,6 +1015,7 @@ function netsukoConfigBackupTools($form): void {
         'bangumiItemsPerStatus',
         'bangumiCacheHours',
         'mottoBanner',
+        'mottoTyping',
         'motto',
         'mottoFont',
         'mottoQuotes',

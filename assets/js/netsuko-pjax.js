@@ -16,6 +16,7 @@
     var currentPjaxHref = window.location.href;
     var drawerCloseTimer = null;
     var scrollStateFrame = null;
+    var mottoTypingTimer = null;
     var watermarkDownloadReady = false;
     var lateLifecycleListeners = [];
     var postLightboxSelector = '.post-content a.netsuko-image-lightbox[data-fancybox]';
@@ -446,6 +447,45 @@
         }, { passive: true });
         window.addEventListener('resize', scheduleReadingProgress);
     }
+
+    function renderMotto(node, text, animate) {
+        if (!node) {
+            return;
+        }
+
+        var quote = node.dataset.mottoQuotes === 'show' ? '"' : '';
+        var output = quote + String(text || '') + quote;
+        window.clearInterval(mottoTypingTimer);
+        node.classList.toggle('netsuko-motto-typing', Boolean(animate));
+
+        if (!animate) {
+            node.textContent = output;
+            return;
+        }
+
+        node.textContent = '';
+        var chars = Array.from(output);
+        var index = 0;
+        mottoTypingTimer = window.setInterval(function () {
+            node.textContent += chars[index] || '';
+            index += 1;
+            if (index >= chars.length) {
+                window.clearInterval(mottoTypingTimer);
+                mottoTypingTimer = null;
+                node.classList.remove('netsuko-motto-typing');
+            }
+        }, 72);
+    }
+
+    theme.initMotto = function (root) {
+        var node = $('#home-motto', root || document);
+        if (!node) {
+            return;
+        }
+
+        var fallback = node.dataset.mottoText || node.textContent.replace(/^"|"$/g, '').trim();
+        renderMotto(node, fallback, node.dataset.mottoTyping === 'on');
+    };
 
     function withAssetVersion(url) {
         if (!url || !config.assetVersion || /[?&]v=/.test(url)) {
@@ -1052,6 +1092,7 @@
         theme.initLatex(root);
         theme.initPostLightbox(root);
         theme.initWatermark(root);
+        theme.initMotto(root);
         theme.initTurnstile(root);
         theme.initMotion(root);
         updateActiveNavigation(currentHref);

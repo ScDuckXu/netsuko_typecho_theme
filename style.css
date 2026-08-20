@@ -762,6 +762,23 @@ html.netsuko-fancybox-open #netsuko-reading-progress {
     visibility: hidden;
 }
 
+.netsuko-motto-typing::after {
+    content: '';
+    display: inline-block;
+    width: 0.08em;
+    height: 0.9em;
+    margin-left: 0.12em;
+    vertical-align: -0.08em;
+    background: currentColor;
+    animation: netsukoMottoCaret 0.9s steps(1, end) infinite;
+}
+
+@keyframes netsukoMottoCaret {
+    50% {
+        opacity: 0;
+    }
+}
+
 @keyframes netsukoPageEnter {
     from {
         opacity: 0;

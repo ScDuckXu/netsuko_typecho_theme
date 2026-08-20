@@ -17,6 +17,7 @@ $bannerHeight = (int) netsukoOption('indexBannerHeight', '300');
 $bannerHeight = max(160, min(800, $bannerHeight));
 $bannerOpacity = max(0, min(100, (int) netsukoOption('bannerOpacity', '50'))) / 100;
 $mottoBanner = netsukoOption('mottoBanner', netsukoOption('motto', '永远相信美好的事情即将发生'));
+$mottoTyping = netsukoOption('mottoTyping', 'off');
 $mottoFont = netsukoOption('mottoFont', 'playfair');
 $mottoQuotes = netsukoOption('mottoQuotes', 'show');
 
@@ -59,7 +60,7 @@ $hasBanner = $bannerUrl || $bannerDarkUrl;
     <?php endif; ?>
 
     <div class="relative z-10 text-center px-4">
-        <h1 id="home-motto" class="text-3xl md:text-5xl <?php echo $mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold text-glow transition-all duration-500">
+        <h1 id="home-motto" class="text-3xl md:text-5xl <?php echo $mottoFont == 'sans' ? 'font-sans not-italic' : 'font-playfair italic'; ?> font-semibold text-glow transition-all duration-500" data-motto-text="<?php echo netsukoEscape($mottoBanner); ?>" data-motto-typing="<?php echo netsukoEscape($mottoTyping === 'on' ? 'on' : 'off'); ?>" data-motto-quotes="<?php echo netsukoEscape($mottoQuotes === 'show' ? 'show' : 'hide'); ?>" aria-live="polite">
             <?php echo $mottoQuotes == 'show' ? '"' : ''; ?><?php echo netsukoEscape($mottoBanner); ?><?php echo $mottoQuotes == 'show' ? '"' : ''; ?>
         </h1>
     </div>
