@@ -1358,12 +1358,24 @@ function netsukoConfigVersionChecker($form): void {
 
 
 function themeFields($layout) {
+    $editorScript = strtolower((string) ($_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? ''));
+    $isPageEditor = substr($editorScript, -14) === 'write-page.php';
+    $isPostEditor = substr($editorScript, -14) === 'write-post.php';
+    $showPostFields = $isPostEditor || (!$isPageEditor && !$isPostEditor);
+    $showPageFields = $isPageEditor || (!$isPageEditor && !$isPostEditor);
     $advancedClass = 'typecho-option netsuko-theme-field-advanced-item';
-    $advancedScript = <<<'HTML'
+    $fieldNames = $showPageFields && !$showPostFields
+        ? array('thumb', 'subtitle', 'enableLatex')
+        : ($showPostFields && !$showPageFields ? array('thumb', 'custom_excerpt', 'stickyPost', 'enableLatex') : array('thumb', 'custom_excerpt', 'stickyPost', 'subtitle', 'enableLatex'));
+    $summaryText = $showPageFields && !$showPostFields
+        ? '头图、副标题和 LaTeX'
+        : ($showPostFields && !$showPageFields ? '头图、摘要、置顶和 LaTeX' : '头图、摘要、置顶、副标题和 LaTeX');
+    $fieldNamesJson = json_encode($fieldNames, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $advancedScript = <<<HTML
 <script>
 (function () {
     function init() {
-        var names = ['thumb', 'custom_excerpt', 'stickyPost', 'subtitle', 'enableLatex'];
+        var names = {$fieldNamesJson};
         var items = names.map(function (name) {
             var input = document.querySelector('[name="fields[' + name + ']"]');
             return input ? input.closest('li.field') : null;
@@ -1376,7 +1388,7 @@ function themeFields($layout) {
         details.className = 'netsuko-theme-fields-advanced';
         var summary = document.createElement('summary');
         summary.className = 'netsuko-theme-fields-summary';
-        summary.innerHTML = '<strong>高级选项</strong><span>头图、摘要、置顶、副标题和 LaTeX</span>';
+        summary.innerHTML = '<strong>高级选项</strong><span>{$summaryText}</span>';
         details.appendChild(summary);
         items[0].parentNode.insertBefore(details, items[0]);
         items.forEach(function (item) { details.appendChild(item); });
@@ -1405,35 +1417,41 @@ HTML;
     $thumb->class = $advancedClass;
     $layout->addItem($thumb);
 
-    $custom_excerpt = new \Typecho\Widget\Helper\Form\Element\Textarea(
-        'custom_excerpt', 
-        NULL, 
-        NULL, 
-        _t('自定义摘要'), 
-        _t('输入这篇文章的精简摘要。留空时首页将自动截取文章正文的前 30 个字。')
-    );
-    $custom_excerpt->class = $advancedClass;
-    $layout->addItem($custom_excerpt);
+    if ($showPostFields) {
+        $custom_excerpt = new \Typecho\Widget\Helper\Form\Element\Textarea(
+            'custom_excerpt',
+            NULL,
+            NULL,
+            _t('自定义摘要'),
+            _t('输入这篇文章的精简摘要。留空时首页将自动截取文章正文的前 30 个字。')
+        );
+        $custom_excerpt->class = $advancedClass;
+        $layout->addItem($custom_excerpt);
+    }
 
-    $stickyPost = new \Typecho\Widget\Helper\Form\Element\Radio(
-        'stickyPost',
-        array('off' => _t('不置顶'), 'on' => _t('首页置顶')),
-        'off',
-        _t('首页置顶'),
-        _t('开启后会在首页第一页顶部显示红标【置顶】，多篇置顶文章按发布时间从新到旧排序。')
-    );
-    $stickyPost->class = $advancedClass;
-    $layout->addItem($stickyPost);
+    if ($showPostFields) {
+        $stickyPost = new \Typecho\Widget\Helper\Form\Element\Radio(
+            'stickyPost',
+            array('off' => _t('不置顶'), 'on' => _t('首页置顶')),
+            'off',
+            _t('首页置顶'),
+            _t('开启后会在首页第一页顶部显示红标【置顶】，多篇置顶文章按发布时间从新到旧排序。')
+        );
+        $stickyPost->class = $advancedClass;
+        $layout->addItem($stickyPost);
+    }
 
-    $subtitle = new \Typecho\Widget\Helper\Form\Element\Text(
-        'subtitle', 
-        NULL, 
-        NULL, 
-        _t('页面副标题'), 
-        _t('显示在页面大标题下方的说明文字。留空则在部分模板下显示默认文案。')
-    );
-    $subtitle->class = $advancedClass;
-    $layout->addItem($subtitle);
+    if ($showPageFields) {
+        $subtitle = new \Typecho\Widget\Helper\Form\Element\Text(
+            'subtitle',
+            NULL,
+            NULL,
+            _t('页面副标题'),
+            _t('显示在页面大标题下方的说明文字。留空则在部分模板下显示默认文案。')
+        );
+        $subtitle->class = $advancedClass;
+        $layout->addItem($subtitle);
+    }
 
     $enableLatex = new \Typecho\Widget\Helper\Form\Element\Radio(
         'enableLatex',
