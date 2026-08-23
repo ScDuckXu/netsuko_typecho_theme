@@ -101,7 +101,16 @@ $sidebarDb = \Typecho\Db::get();
             <?php if (in_array('comments', $sidebarModules, true)): ?>
                 <?php
                 $sidebarRecentComments = $sidebarDb->fetchAll(
-                    $sidebarDb->select('table.comments.coid', 'table.comments.cid', 'table.comments.author', 'table.comments.text', 'table.contents.title')
+                    $sidebarDb->select(
+                        'table.comments.coid',
+                        'table.comments.cid',
+                        'table.comments.author',
+                        'table.comments.text',
+                        'table.contents.title',
+                        'table.contents.slug',
+                        'table.contents.type',
+                        'table.contents.created'
+                    )
                         ->from('table.comments')
                         ->join('table.contents', 'table.comments.cid = table.contents.cid')
                         ->where('table.comments.type = ?', 'comment')
@@ -116,7 +125,7 @@ $sidebarDb = \Typecho\Db::get();
                         <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">最近评论</h3>
                         <div class="space-y-3">
                             <?php foreach ($sidebarRecentComments as $sidebarComment): ?>
-                                <?php $sidebarCommentUrl = netsukoContentPermalink(['cid' => (int) $sidebarComment['cid'], 'type' => 'post']) . '#comment-' . (int) $sidebarComment['coid']; ?>
+                                <?php $sidebarCommentUrl = netsukoContentPermalink($sidebarComment) . '#comment-' . (int) $sidebarComment['coid']; ?>
                                 <a href="<?php echo netsukoUrl($sidebarCommentUrl); ?>" class="block text-sm group">
                                     <div class="flex items-center justify-between gap-2"><span class="font-medium text-gray-700 dark:text-gray-300 group-hover:text-teal"><?php echo netsukoEscape($sidebarComment['author']); ?></span><span class="text-xs text-gray-400">#<?php echo (int) $sidebarComment['coid']; ?></span></div>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2"><?php echo netsukoEscape(netsukoMailPlainText((string) $sidebarComment['text'])); ?></p>
