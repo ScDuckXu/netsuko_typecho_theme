@@ -19,7 +19,6 @@
                 Powered by <a href="http://typecho.org" target="_blank" rel="noopener noreferrer" class="hover:text-teal transition-colors">Typecho</a>
                 <span class="mx-1.5 text-gray-300 dark:text-gray-700">·</span>
                 Theme <a href="https://github.com/ScDuckXu/netsuko_typecho_theme" target="_blank" rel="noopener noreferrer" class="hover:text-teal transition-colors">Netsuko</a>
-                <span class="mx-1.5 text-gray-300 dark:text-gray-700">·</span>
                 by <a href="https://duckxu.com" target="_blank" rel="noopener noreferrer" class="hover:text-teal transition-colors">Nazuki</a>
             </p>
         </div>
