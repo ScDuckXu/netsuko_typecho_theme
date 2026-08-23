@@ -3,8 +3,8 @@
 </div>
 
 <footer class="mt-12 border-t border-gray-200/50 dark:border-white/5 bg-white dark:bg-darkBg transition-colors duration-500">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-        <div class="flex flex-col gap-3 text-center text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div class="flex flex-col gap-3 text-center text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
             <p class="font-medium">
                 &copy; <?php echo date('Y'); ?> <a href="<?php $this->options->siteUrl(); ?>" class="hover:text-teal transition-colors"><?php $this->options->title(); ?></a>
                 <?php if ($this->options->icpNum): ?>
