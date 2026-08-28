@@ -2388,9 +2388,8 @@ function netsukoLocalCaptchaChallenge(): array {
     $left = random_int(2, 9);
     $right = random_int(2, 9);
     $expires = time() + 600;
-    // Do not bind the challenge to REMOTE_ADDR: reverse proxies and mobile networks
-    // may expose different client addresses between the page request and POST.
-    $payload = implode('|', [$left, $right, $expires]);
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $payload = implode('|', [$left, $right, $expires, hash('sha256', $ip)]);
     $token = base64_encode($payload . '|' . netsukoCaptchaSign($payload));
 
     return [$left, $right, $token];
@@ -2403,19 +2402,12 @@ function netsukoVerifyLocalCaptchaToken(string $token, int $answer): bool {
     }
 
     $parts = explode('|', $decoded);
-    if (count($parts) !== 4 && count($parts) !== 5) {
+    if (count($parts) !== 5) {
         return false;
     }
 
-    if (count($parts) === 4) {
-        [$left, $right, $expires, $signature] = $parts;
-        $payload = implode('|', [$left, $right, $expires]);
-    } else {
-        // Accept challenges issued by 1.3.0 before the proxy-safe format.
-        [$left, $right, $expires, $ipHash, $signature] = $parts;
-        $payload = implode('|', [$left, $right, $expires, $ipHash]);
-    }
-
+    [$left, $right, $expires, $ipHash, $signature] = $parts;
+    $payload = implode('|', [$left, $right, $expires, $ipHash]);
     if (!hash_equals(netsukoCaptchaSign($payload), $signature)) {
         return false;
     }
@@ -2424,8 +2416,10 @@ function netsukoVerifyLocalCaptchaToken(string $token, int $answer): bool {
         return false;
     }
 
-    // Legacy five-part tokens retain their signed IP hash for compatibility,
-    // but do not compare it here because a reverse proxy may change REMOTE_ADDR.
+    $currentIpHash = hash('sha256', $_SERVER['REMOTE_ADDR'] ?? '');
+    if (!hash_equals($currentIpHash, $ipHash)) {
+        return false;
+    }
 
     return ((int) $left + (int) $right) === $answer;
 }
@@ -2496,7 +2490,7 @@ function netsukoVerifyCommentCaptcha($comment, $content = null) {
         $token = trim((string) ($_POST['netsuko_local_captcha_token'] ?? ''));
 
         if ($input === '' || !ctype_digit($input) || !netsukoVerifyLocalCaptchaToken($token, (int) $input)) {
-            throw new \Typecho\Widget\Exception(_t('验证码不正确，请重新输入。'), 400);
+            throw new \Typecho\Exception(_t('验证码不正确，请重新输入。'));
         }
 
         return $comment;
@@ -2508,15 +2502,15 @@ function netsukoVerifyCommentCaptcha($comment, $content = null) {
         $token = trim((string) ($_POST['cf-turnstile-response'] ?? ''));
 
         if ($secret === '') {
-            throw new \Typecho\Widget\Exception(_t('Turnstile Secret Key 尚未配置。'), 400);
+            throw new \Typecho\Exception(_t('Turnstile Secret Key 尚未配置。'));
         }
 
         if ($token === '') {
-            throw new \Typecho\Widget\Exception(_t('请先完成人机验证。'), 400);
+            throw new \Typecho\Exception(_t('请先完成人机验证。'));
         }
 
         if (!netsukoVerifyTurnstileToken($secret, $token)) {
-            throw new \Typecho\Widget\Exception(_t('人机验证失败，请重试。'), 400);
+            throw new \Typecho\Exception(_t('人机验证失败，请重试。'));
         }
     }
 
